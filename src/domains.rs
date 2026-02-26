@@ -5,9 +5,7 @@ pub trait Domain: PartialOrd + Clone + Add<Output = Self> {
     fn last() -> Self;
     fn zero() -> Self;
 }
-pub trait DomainSection<D: Domain>:
-    Clone + Add<Output = Self> + Mul<Output = Self>
-{
+pub trait DomainSection<D: Domain>: Clone + Add<Output = Self> + Mul<Output = Self> {
     type Iter: Iterator<Item = D>;
 
     fn contains(&self, x: D) -> bool;
@@ -104,12 +102,11 @@ impl<D: Domain> DomainSection<D> for DomainSection1D<D> {
             step_size: D::last(),
         }
     }
-    
-    
+
     fn iter(&self) -> Self::Iter {
         Domain1DIter::new(self, self.step_size.clone())
     }
-    
+
     fn step_size(&self) -> D {
         self.step_size.clone()
     }

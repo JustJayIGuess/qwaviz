@@ -4,36 +4,25 @@ use std::{
 };
 
 use crate::{
-    domains::{Domain, DomainSection},
+    domains::DomainSection,
+    signatures::WFSignature,
     vectorspace::{Field, VectorSpace},
 };
 
-pub trait WFSignature<In, Out>
+pub struct WFKet<S>
 where
-    In: Domain,
-    Out: Field,
+    S: WFSignature,
 {
-    fn mul_to_codomain(a: In, b: Out) -> Out;
+    pub f: Rc<dyn Fn(S::In) -> S::Out>,
+    pub domain: S::Dom,
 }
 
-pub struct WFKet<In, Out, D>
+pub struct WFBra<S>
 where
-    In: Domain + 'static,
-    Out: Field + 'static,
-    D: DomainSection<In>,
+    S: WFSignature,
 {
-    pub f: Rc<dyn Fn(In) -> Out>,
-    pub domain: D,
-}
-
-pub struct WFBra<In, Out, D>
-where
-    In: Domain + 'static,
-    Out: Field + 'static,
-    D: DomainSection<In>,
-{
-    f: Rc<dyn Fn(In) -> Out>,
-    domain: D,
+    f: Rc<dyn Fn(S::In) -> S::Out>,
+    domain: S::Dom,
 }
 
 pub trait Ket<F: Field>: VectorSpace<F> {
@@ -47,11 +36,9 @@ pub trait Bra<F: Field>: VectorSpace<F> {
     fn apply(&self, ket: &Self::Ket) -> F;
 }
 
-impl<In, Out, D> Add for WFKet<In, Out, D>
+impl<S> Add for WFKet<S>
 where
-    In: Domain,
-    Out: Field,
-    D: DomainSection<In>,
+    S: WFSignature,
 {
     type Output = Self;
 
@@ -59,17 +46,15 @@ where
         let f = self.f;
         let g = rhs.f;
         WFKet {
-            f: Rc::new(move |x: In| f(x.clone()) + g(x)),
+            f: Rc::new(move |x: S::In| f(x.clone()) + g(x)),
             domain: self.domain + rhs.domain,
         }
     }
 }
 
-impl<In, Out, D> Sub for WFKet<In, Out, D>
+impl<S> Sub for WFKet<S>
 where
-    In: Domain,
-    Out: Field,
-    D: DomainSection<In>,
+    S: WFSignature,
 {
     type Output = Self;
 
@@ -77,34 +62,30 @@ where
         let f = self.f;
         let g = rhs.f;
         WFKet {
-            f: Rc::new(move |x: In| f(x.clone()) - g(x)),
+            f: Rc::new(move |x: S::In| f(x.clone()) - g(x)),
             domain: self.domain + rhs.domain,
         }
     }
 }
 
-impl<In, Out, D> Neg for WFKet<In, Out, D>
+impl<S> Neg for WFKet<S>
 where
-    In: Domain,
-    Out: Field,
-    D: DomainSection<In>,
+    S: WFSignature,
 {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
         let f = self.f;
         WFKet {
-            f: Rc::new(move |x: In| -f(x)),
+            f: Rc::new(move |x: S::In| -f(x)),
             domain: self.domain,
         }
     }
 }
 
-impl<In, Out, D> Clone for WFKet<In, Out, D>
+impl<S> Clone for WFKet<S>
 where
-    In: Domain,
-    Out: Field,
-    D: DomainSection<In>,
+    S: WFSignature,
 {
     fn clone(&self) -> Self {
         WFKet {
@@ -114,20 +95,18 @@ where
     }
 }
 
-impl<In, Out, D> VectorSpace<Out> for WFKet<In, Out, D>
+impl<S> VectorSpace<S::Out> for WFKet<S>
 where
-    In: Domain,
-    Out: Field,
-    D: DomainSection<In>,
+    S: WFSignature,
 {
     fn zero() -> Self {
         WFKet {
-            f: Rc::new(|_| Out::zero()),
-            domain: D::all(),
+            f: Rc::new(|_| S::Out::zero()),
+            domain: S::Dom::all(),
         }
     }
 
-    fn scale(self, c: Out) -> Self {
+    fn scale(self, c: S::Out) -> Self {
         WFKet {
             f: Rc::new(move |x| c.clone() * (self.f)(x)),
             domain: self.domain,
@@ -135,11 +114,9 @@ where
     }
 }
 
-impl<In, Out, D> Add for WFBra<In, Out, D>
+impl<S> Add for WFBra<S>
 where
-    In: Domain,
-    Out: Field,
-    D: DomainSection<In>,
+    S: WFSignature,
 {
     type Output = Self;
 
@@ -147,17 +124,15 @@ where
         let f = self.f;
         let g = rhs.f;
         WFBra {
-            f: Rc::new(move |x: In| f(x.clone()) + g(x)),
+            f: Rc::new(move |x: S::In| f(x.clone()) + g(x)),
             domain: self.domain + rhs.domain,
         }
     }
 }
 
-impl<In, Out, D> Sub for WFBra<In, Out, D>
+impl<S> Sub for WFBra<S>
 where
-    In: Domain,
-    Out: Field,
-    D: DomainSection<In>,
+    S: WFSignature,
 {
     type Output = Self;
 
@@ -165,34 +140,30 @@ where
         let f = self.f;
         let g = rhs.f;
         WFBra {
-            f: Rc::new(move |x: In| f(x.clone()) - g(x)),
+            f: Rc::new(move |x: S::In| f(x.clone()) - g(x)),
             domain: self.domain + rhs.domain,
         }
     }
 }
 
-impl<In, Out, D> Neg for WFBra<In, Out, D>
+impl<S> Neg for WFBra<S>
 where
-    In: Domain,
-    Out: Field,
-    D: DomainSection<In>,
+    S: WFSignature,
 {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
         let f = self.f;
         WFBra {
-            f: Rc::new(move |x: In| -f(x)),
+            f: Rc::new(move |x: S::In| -f(x)),
             domain: self.domain,
         }
     }
 }
 
-impl<In, Out, D> Clone for WFBra<In, Out, D>
+impl<S> Clone for WFBra<S>
 where
-    In: Domain,
-    Out: Field,
-    D: DomainSection<In>,
+    S: WFSignature,
 {
     fn clone(&self) -> Self {
         WFBra {
@@ -202,53 +173,46 @@ where
     }
 }
 
-impl<In, Out, D> VectorSpace<Out> for WFBra<In, Out, D>
+impl<S> VectorSpace<S::Out> for WFBra<S>
 where
-    In: Domain,
-    Out: Field,
-    D: DomainSection<In>,
+    S: WFSignature,
 {
     fn zero() -> Self {
         WFBra {
-            f: Rc::new(|_| Out::zero()),
-            domain: D::none(),
+            f: Rc::new(|_| S::Out::zero()),
+            domain: S::Dom::none(),
         }
     }
 
-    fn scale(self, c: Out) -> Self {
+    fn scale(self, c: S::Out) -> Self {
         WFBra {
-            f: Rc::new(move |x| c.clone() * (self.f)(x)),
+            f: Rc::new(move |x: S::In| c.clone() * (self.f)(x)),
             domain: self.domain,
         }
     }
 }
 
-impl<In, Out, D> Bra<Out> for WFBra<In, Out, D>
+impl<S> Bra<S::Out> for WFBra<S>
 where
-    In: Domain,
-    Out: Field,
-    D: DomainSection<In>,
+    S: WFSignature,
 {
-    type Ket = WFKet<In, Out, D>;
+    type Ket = WFKet<S>;
 
-    fn apply(&self, ket: &Self::Ket) -> Out {
-        todo!();
-        let mut res = Out::zero();
+    fn apply(&self, ket: &Self::Ket) -> S::Out {
+        let mut res = S::Out::zero();
         let domain = ket.domain.clone() * self.domain.clone();
         for x in domain.iter() {
-            res = res + domain.step_size() * ((self.f)(x.clone()) * (ket.f)(x));
+            res = res + S::mul_to_codomain(domain.step_size(), (self.f)(x.clone()) * (ket.f)(x));
         }
         res
     }
 }
 
-impl<In, Out, D> Ket<Out> for WFKet<In, Out, D>
+impl<S> Ket<S::Out> for WFKet<S>
 where
-    In: Domain,
-    Out: Field,
-    D: DomainSection<In>,
+    S: WFSignature,
 {
-    type Bra = WFBra<In, Out, D>;
+    type Bra = WFBra<S>;
 
     fn adjoint(self) -> Self::Bra {
         Self::Bra {
@@ -257,7 +221,7 @@ where
         }
     }
 
-    fn norm_sqr(&self) -> Out {
+    fn norm_sqr(&self) -> S::Out {
         self.clone().adjoint().apply(&self)
     }
 }
