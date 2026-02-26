@@ -1,4 +1,4 @@
-use std::{f32::consts::PI, rc::Rc};
+use std::{f32::consts::PI, sync::Arc, time::Instant};
 
 use num_complex::Complex32;
 
@@ -17,7 +17,7 @@ pub mod vectorspace;
 fn get_isw_eigenstate(width: f32, mass: f32, hbar: f32, n: u32, t: f32) -> WFKet<WFSignature1D> {
     WFKet {
         operation: KetOperation::Function {
-            a: Rc::new(move |x| {
+            a: Arc::new(move |x| {
                 let energy = (n as f32 * PI * hbar / width).powi(2) / (2.0 * mass);
                 let coef = (2.0 / width).sqrt();
                 let phase_x = n as f32 * PI * x / width;
@@ -27,14 +27,18 @@ fn get_isw_eigenstate(width: f32, mass: f32, hbar: f32, n: u32, t: f32) -> WFKet
         domain: DomainSection1D {
             lower: 0.0,
             upper: width,
-            step_size: width / 1000.0,
+            step_size: width / 10000.0,
         },
     }
 }
 
 fn main() {
+    let start = Instant::now();
+
     let kets: [WFKet<WFSignature1D>; 8] =
-        std::array::from_fn(|i| get_isw_eigenstate(1.0, 1.0, 1.0, i as u32, 0.0));
+        std::array::from_fn(|i| get_isw_eigenstate(1.0, 1.0, 1.0, (i + 1) as u32, 0.0));
+
+    let middle = Instant::now();
 
     for i in 0..8 {
         for j in 0..8 {
@@ -42,4 +46,12 @@ fn main() {
             println!("{},{}: {}", i + 1, j + 1, inner_prod.norm());
         }
     }
+
+    let finish = Instant::now();
+    println!(
+        "Alloc: {:?}, Compute: {:?}, Total: {:?}",
+        middle - start,
+        finish - middle,
+        finish - start
+    );
 }

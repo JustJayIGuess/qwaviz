@@ -1,4 +1,10 @@
-use std::{ops::{Add, Mul, Neg, Sub}, rc::Rc};
+use std::{
+    ops::{Add, Mul, Neg, Sub},
+    sync::Arc,
+};
+
+#[cfg(feature = "par_braket")]
+use rayon::iter::{ParallelBridge, ParallelIterator};
 
 use crate::{
     domains::DomainSection,
@@ -24,7 +30,7 @@ pub trait Bra<F: Field>: VectorSpace<F> {
 #[derive(Clone)]
 pub enum KetOperation<S: WFSignature> {
     Function {
-        a: Rc<dyn Fn(S::In) -> S::Out>,
+        a: Arc<dyn Fn(S::In) -> S::Out + Send + Sync>,
     },
     Add {
         a: Box<KetOperation<S>>,
@@ -146,7 +152,7 @@ where
     fn zero() -> Self {
         WFKet {
             operation: KetOperation::Function {
-                a: Rc::new(|_| S::Out::zero()),
+                a: Arc::new(|_| S::Out::zero()),
             },
             domain: S::Dom::all(),
         }
@@ -220,7 +226,7 @@ where
     fn zero() -> Self {
         WFBra {
             operation: KetOperation::Function {
-                a: Rc::new(|_| S::Out::zero()),
+                a: Arc::new(|_| S::Out::zero()),
             },
             domain: S::Dom::none(),
         }
@@ -251,13 +257,24 @@ where
 {
     type Ket = WFKet<S>;
 
+    #[cfg(not(feature = "par_braket"))]
     fn apply(self, ket: Self::Ket) -> S::Out {
-        let mut res = S::Out::zero();
         let domain = ket.domain.clone() * self.domain.clone();
-        for x in domain.iter() {
-            res = res + S::mul_to_codomain(domain.step_size(), self.f(x.clone()) * ket.f(x));
-        }
-        res
+        domain
+            .iter()
+            .map(|x| S::mul_to_codomain(domain.step_size(), self.f(x.clone()) * ket.f(x)))
+            .reduce(|a, b| a + b)
+            .unwrap_or_else(|| S::Out::zero())
+    }
+
+    #[cfg(feature = "par_braket")]
+    fn apply(self, ket: Self::Ket) -> S::Out {
+        let domain = ket.domain.clone() * self.domain.clone();
+        domain
+            .iter()
+            .par_bridge()
+            .map(|x| S::mul_to_codomain(domain.step_size(), self.f(x.clone())) * ket.f(x))
+            .reduce(|| S::Out::zero(), |a, b| a + b)
     }
 }
 

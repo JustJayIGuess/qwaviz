@@ -1,17 +1,15 @@
 use std::ops::{Add, Mul};
 
-pub trait Domain: Sized + PartialOrd + Clone + Add<Output = Self> {
+pub trait Domain: Sized + PartialOrd + Clone + Add<Output = Self> + Send + Sync {
     fn first() -> Self;
     fn last() -> Self;
     fn zero() -> Self;
 }
 pub trait DomainSection<D: Domain>: Clone + Add<Output = Self> + Mul<Output = Self> {
-    type Iter: Iterator<Item = D>;
-
     fn contains(&self, x: D) -> bool;
     fn all() -> Self;
     fn none() -> Self;
-    fn iter(&self) -> Self::Iter;
+    fn iter(&self) -> impl Iterator<Item = D> + Sized + Send + Sync;
     fn step_size(&self) -> D;
 }
 
@@ -51,25 +49,6 @@ impl<D: Domain> Iterator for Domain1DIter<D> {
     }
 }
 
-// impl<D: Domain> IntoIterator for DomainSection1D<D> {
-//     type Item = D;
-
-//     type IntoIter = Domain1DIter<D>;
-
-//     fn into_iter(self) -> Self::IntoIter {
-//         Domain1DIter::new(&self, self.step_size.clone())
-//     }
-// }
-
-// impl<'a, D: Domain> IntoIterator for &'a DomainSection1D<D> {
-//     type Item = D;
-//     type IntoIter = Domain1DIter<D>;
-
-//     fn into_iter(self) -> Self::IntoIter {
-//         Domain1DIter::new(self, self.step_size.clone())
-//     }
-// }
-
 impl<D: Domain> Clone for DomainSection1D<D> {
     fn clone(&self) -> Self {
         Self {
@@ -81,8 +60,6 @@ impl<D: Domain> Clone for DomainSection1D<D> {
 }
 
 impl<D: Domain> DomainSection<D> for DomainSection1D<D> {
-    type Iter = Domain1DIter<D>;
-
     fn contains(&self, x: D) -> bool {
         self.lower <= x && x <= self.upper
     }
@@ -103,7 +80,7 @@ impl<D: Domain> DomainSection<D> for DomainSection1D<D> {
         }
     }
 
-    fn iter(&self) -> Self::Iter {
+    fn iter(&self) -> impl Iterator<Item = D> {
         Domain1DIter::new(self, self.step_size.clone())
     }
 
