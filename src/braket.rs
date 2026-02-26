@@ -7,30 +7,30 @@ use std::{
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
 use crate::{
-    domains::DomainSection,
+    domains::{Domain, DomainSection},
     signatures::WFSignature,
     vectorspace::{Field, VectorSpace},
 };
 
 pub trait Wavefunction<S: WFSignature> {
-    fn f(&self, x: S::In) -> S::Out;
+    fn f(&self, x: S::Space, t: S::Time) -> S::Out;
 }
 
-pub trait Ket<F: Field>: VectorSpace<F> {
-    type Bra: Bra<F>;
+pub trait Ket<S: WFSignature>: VectorSpace<S::Out> {
+    type Bra: Bra<S>;
     fn adjoint(self) -> Self::Bra;
-    fn norm_sqr(&self) -> F;
+    fn norm_sqr(&self, t: S::Time) -> S::Out;
 }
 
-pub trait Bra<F: Field>: VectorSpace<F> {
-    type Ket: Ket<F>;
-    fn apply(self, ket: Self::Ket) -> F;
+pub trait Bra<S: WFSignature>: VectorSpace<S::Out> {
+    type Ket: Ket<S>;
+    fn apply(self, ket: Self::Ket, t: S::Time) -> S::Out;
 }
 
 #[derive(Clone)]
 pub enum KetOperation<S: WFSignature> {
     Function {
-        a: Arc<dyn Fn(S::In) -> S::Out + Send + Sync>,
+        a: Arc<dyn Fn(S::Space, S::Time) -> S::Out + Send + Sync>,
     },
     Add {
         a: Box<KetOperation<S>>,
@@ -53,14 +53,14 @@ pub enum KetOperation<S: WFSignature> {
 }
 
 impl<S: WFSignature> KetOperation<S> {
-    fn eval(&self, x: S::In) -> S::Out {
+    fn eval(&self, x: S::Space, t: S::Time) -> S::Out {
         match self {
-            KetOperation::Function { a } => a(x),
-            KetOperation::Add { a, b } => a.eval(x.clone()) + b.eval(x),
-            KetOperation::Sub { a, b } => a.eval(x.clone()) - b.eval(x),
-            KetOperation::Mul { a, b } => a.clone() * b.eval(x),
-            KetOperation::Neg { a } => -a.eval(x),
-            KetOperation::Adjoint { a } => a.eval(x).conjugate(),
+            KetOperation::Function { a } => a(x, t),
+            KetOperation::Add { a, b } => a.eval(x.clone(), t.clone()) + b.eval(x, t),
+            KetOperation::Sub { a, b } => a.eval(x.clone(), t.clone()) - b.eval(x, t),
+            KetOperation::Mul { a, b } => a.clone() * b.eval(x, t),
+            KetOperation::Neg { a } => -a.eval(x, t),
+            KetOperation::Adjoint { a } => a.eval(x, t).conjugate(),
         }
     }
 }
@@ -84,14 +84,14 @@ where
 }
 
 impl<S: WFSignature> Wavefunction<S> for WFKet<S> {
-    fn f(&self, x: S::In) -> <S as WFSignature>::Out {
-        self.operation.eval(x)
+    fn f(&self, x: S::Space, t: S::Time) -> <S as WFSignature>::Out {
+        self.operation.eval(x, t)
     }
 }
 
 impl<S: WFSignature> Wavefunction<S> for WFBra<S> {
-    fn f(&self, x: S::In) -> <S as WFSignature>::Out {
-        self.operation.eval(x)
+    fn f(&self, x: S::Space, t: S::Time) -> <S as WFSignature>::Out {
+        self.operation.eval(x, t)
     }
 }
 
@@ -152,7 +152,7 @@ where
     fn zero() -> Self {
         WFKet {
             operation: KetOperation::Function {
-                a: Arc::new(|_| S::Out::zero()),
+                a: Arc::new(|_, _| S::Out::zero()),
             },
             domain: S::Dom::all(),
         }
@@ -226,7 +226,7 @@ where
     fn zero() -> Self {
         WFBra {
             operation: KetOperation::Function {
-                a: Arc::new(|_| S::Out::zero()),
+                a: Arc::new(|_, _| S::Out::zero()),
             },
             domain: S::Dom::none(),
         }
@@ -247,38 +247,46 @@ impl<S: WFSignature> Mul<WFKet<S>> for WFBra<S> {
     type Output = S::Out;
 
     fn mul(self, rhs: WFKet<S>) -> Self::Output {
-        self.apply(rhs)
+        self.apply(rhs, S::Time::zero())
     }
 }
 
-impl<S> Bra<S::Out> for WFBra<S>
+impl<S> Bra<S> for WFBra<S>
 where
     S: WFSignature,
 {
     type Ket = WFKet<S>;
 
     #[cfg(not(feature = "par_braket"))]
-    fn apply(self, ket: Self::Ket) -> S::Out {
+    fn apply(self, ket: Self::Ket, t: S::Time) -> S::Out {
         let domain = ket.domain.clone() * self.domain.clone();
         domain
             .iter()
-            .map(|x| S::mul_to_codomain(domain.step_size(), self.f(x.clone()) * ket.f(x)))
+            .map(|x| {
+                S::mul_to_codomain(
+                    domain.step_size(),
+                    self.f(x.clone(), t.clone()) * ket.f(x, t.clone()),
+                )
+            })
             .reduce(|a, b| a + b)
             .unwrap_or_else(|| S::Out::zero())
     }
 
     #[cfg(feature = "par_braket")]
-    fn apply(self, ket: Self::Ket) -> S::Out {
+    fn apply(self, ket: Self::Ket, t: S::Time) -> S::Out {
         let domain = ket.domain.clone() * self.domain.clone();
         domain
             .iter()
             .par_bridge()
-            .map(|x| S::mul_to_codomain(domain.step_size(), self.f(x.clone())) * ket.f(x))
+            .map(|x| {
+                S::mul_to_codomain(domain.step_size(), self.f(x.clone(), t.clone()))
+                    * ket.f(x, t.clone())
+            })
             .reduce(|| S::Out::zero(), |a, b| a + b)
     }
 }
 
-impl<S> Ket<S::Out> for WFKet<S>
+impl<S> Ket<S> for WFKet<S>
 where
     S: WFSignature,
 {
@@ -293,7 +301,7 @@ where
         }
     }
 
-    fn norm_sqr(&self) -> S::Out {
-        self.clone().adjoint().apply(self.clone())
+    fn norm_sqr(&self, t: S::Time) -> S::Out {
+        self.clone().adjoint().apply(self.clone(), t)
     }
 }

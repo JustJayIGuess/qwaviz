@@ -6,23 +6,23 @@ use crate::{
 };
 
 pub trait WFSignature: Clone {
-    type In: Domain + Send + Sync;
+    type Space: Domain + Send + Sync;
+    type Time: Domain + Send + Sync;
     type Out: Field + Send + Sync;
-    type Dom: DomainSection<Self::In> + Send + Sync;
-    fn mul_to_codomain(a: Self::In, b: Self::Out) -> Self::Out;
+    type Dom: DomainSection<Self::Space> + Send + Sync;
+    fn mul_to_codomain(a: Self::Space, b: Self::Out) -> Self::Out;
 }
 
 #[derive(Clone)]
 pub struct WFSignature1D;
 
 impl WFSignature for WFSignature1D {
-    type In = f32;
-
+    type Space = f32;
+    type Time = f32;
     type Out = Complex32;
+    type Dom = DomainSection1D<Self::Space>;
 
-    type Dom = DomainSection1D<Self::In>;
-
-    fn mul_to_codomain(a: Self::In, b: Self::Out) -> Self::Out {
+    fn mul_to_codomain(a: Self::Space, b: Self::Out) -> Self::Out {
         a * b
     }
 }

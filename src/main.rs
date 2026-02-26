@@ -3,7 +3,7 @@ use std::{f32::consts::PI, sync::Arc, time::Instant};
 use num_complex::Complex32;
 
 use crate::{
-    braket::{Ket, KetOperation, WFKet},
+    braket::{Bra, Ket, KetOperation, WFKet},
     domains::DomainSection1D,
     signatures::WFSignature1D,
 };
@@ -14,10 +14,10 @@ pub mod fields;
 pub mod signatures;
 pub mod vectorspace;
 
-fn get_isw_eigenstate(width: f32, mass: f32, hbar: f32, n: u32, t: f32) -> WFKet<WFSignature1D> {
+fn get_isw_eigenstate(width: f32, mass: f32, hbar: f32, n: u32) -> WFKet<WFSignature1D> {
     WFKet {
         operation: KetOperation::Function {
-            a: Arc::new(move |x| {
+            a: Arc::new(move |x, t| {
                 let energy = (n as f32 * PI * hbar / width).powi(2) / (2.0 * mass);
                 let coef = (2.0 / width).sqrt();
                 let phase_x = n as f32 * PI * x / width;
@@ -36,13 +36,13 @@ fn main() {
     let start = Instant::now();
 
     let kets: [WFKet<WFSignature1D>; 8] =
-        std::array::from_fn(|i| get_isw_eigenstate(1.0, 1.0, 1.0, (i + 1) as u32, 0.0));
+        std::array::from_fn(|i| get_isw_eigenstate(1.0, 1.0, 1.0, (i + 1) as u32));
 
     let middle = Instant::now();
 
     for i in 0..8 {
         for j in 0..8 {
-            let inner_prod = kets[i].clone().adjoint() * kets[j].clone();
+            let inner_prod = kets[i].clone().adjoint().apply(kets[j].clone(), 0.0);
             println!("{},{}: {}", i + 1, j + 1, inner_prod.norm());
         }
     }
