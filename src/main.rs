@@ -2,7 +2,9 @@ use std::rc::Rc;
 
 use num_complex::Complex32;
 
-use crate::{braket::WFKet, vectorspace::DomainSection1D};
+use crate::{
+    braket::{Bra, Ket, WFKet}, domains::DomainSection1D,
+};
 
 pub mod braket;
 pub mod domains;
@@ -15,9 +17,11 @@ fn main() {
         domain: DomainSection1D {
             lower: 0.0,
             upper: 1.0,
-            step_size: 0.1,
+            step_size: 0.01,
         },
     };
 
-    println!("Hello, world!");
+    let norm = ket.clone().adjoint().apply(&ket).sqrt();
+
+    println!("Norm: {}", norm);
 }

@@ -3,7 +3,18 @@ use std::{
     rc::Rc,
 };
 
-use crate::vectorspace::{Domain, DomainSection, Field, VectorSpace};
+use crate::{
+    domains::{Domain, DomainSection},
+    vectorspace::{Field, VectorSpace},
+};
+
+pub trait WFSignature<In, Out>
+where
+    In: Domain,
+    Out: Field,
+{
+    fn mul_to_codomain(a: In, b: Out) -> Out;
+}
 
 pub struct WFKet<In, Out, D>
 where
@@ -15,7 +26,7 @@ where
     pub domain: D,
 }
 
-struct WFBra<In, Out, D>
+pub struct WFBra<In, Out, D>
 where
     In: Domain + 'static,
     Out: Field + 'static,
@@ -25,13 +36,13 @@ where
     domain: D,
 }
 
-trait Ket<F: Field>: VectorSpace<F> {
+pub trait Ket<F: Field>: VectorSpace<F> {
     type Bra: Bra<F>;
     fn adjoint(self) -> Self::Bra;
     fn norm_sqr(&self) -> F;
 }
 
-trait Bra<F: Field>: VectorSpace<F> {
+pub trait Bra<F: Field>: VectorSpace<F> {
     type Ket: Ket<F>;
     fn apply(&self, ket: &Self::Ket) -> F;
 }
@@ -221,7 +232,13 @@ where
     type Ket = WFKet<In, Out, D>;
 
     fn apply(&self, ket: &Self::Ket) -> Out {
-        todo!()
+        todo!();
+        let mut res = Out::zero();
+        let domain = ket.domain.clone() * self.domain.clone();
+        for x in domain.iter() {
+            res = res + domain.step_size() * ((self.f)(x.clone()) * (ket.f)(x));
+        }
+        res
     }
 }
 
