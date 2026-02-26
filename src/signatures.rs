@@ -14,9 +14,9 @@ pub trait WFSignature: Clone {
 }
 
 #[derive(Clone)]
-pub struct WFSignature1D;
+pub struct WF1Space1Time;
 
-impl WFSignature for WFSignature1D {
+impl WFSignature for WF1Space1Time {
     type Space = f32;
     type Time = f32;
     type Out = Complex32;

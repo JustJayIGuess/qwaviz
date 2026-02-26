@@ -84,14 +84,22 @@ where
 }
 
 impl<S: WFSignature> Wavefunction<S> for WFKet<S> {
-    fn f(&self, x: S::Space, t: S::Time) -> <S as WFSignature>::Out {
-        self.operation.eval(x, t)
+    fn f(&self, x: S::Space, t: S::Time) -> S::Out {
+        if self.domain.contains(x.clone()) {
+            self.operation.eval(x, t)
+        } else {
+            S::Out::zero()
+        }
     }
 }
 
 impl<S: WFSignature> Wavefunction<S> for WFBra<S> {
-    fn f(&self, x: S::Space, t: S::Time) -> <S as WFSignature>::Out {
-        self.operation.eval(x, t)
+    fn f(&self, x: S::Space, t: S::Time) -> S::Out {
+        if self.domain.contains(x.clone()) {
+            self.operation.eval(x, t)
+        } else {
+            S::Out::zero()
+        }
     }
 }
 
