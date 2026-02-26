@@ -5,13 +5,14 @@ use crate::{
     vectorspace::Field,
 };
 
-pub trait WFSignature {
-    type In: Domain + 'static;
-    type Out: Field + 'static;
+pub trait WFSignature: Clone {
+    type In: Domain;
+    type Out: Field;
     type Dom: DomainSection<Self::In>;
     fn mul_to_codomain(a: Self::In, b: Self::Out) -> Self::Out;
 }
 
+#[derive(Clone)]
 pub struct WFSignature1D;
 
 impl WFSignature for WFSignature1D {
