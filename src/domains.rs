@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul};
 
-pub trait Domain: PartialOrd + Clone + Add<Output = Self> {
+pub trait Domain: Sized + PartialOrd + Clone + Add<Output = Self> {
     fn first() -> Self;
     fn last() -> Self;
     fn zero() -> Self;
