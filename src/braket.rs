@@ -31,7 +31,7 @@ pub trait Ket<S: WFSignature>: VectorSpace<S::Out> {
     /// The corresponding bra (covector) type
     type Bra: Bra<S>;
     /// Convert to corresponding bra (covector)
-    fn adjoint(self) -> Self::Bra;
+    fn adjoint(&self) -> Self::Bra;
     /// Compute the squared norm using the standard inner product
     fn norm_sqr(&self, t: S::Time) -> S::Out;
 }
@@ -49,8 +49,10 @@ pub trait Bra<S: WFSignature>: VectorSpace<S::Out> {
 pub enum WFOperation<S: WFSignature> {
     /// A constant in the function space (i.e., a function from (Space x Time) --> Out)
     Function(Arc<WFFunc<S>>),
-    /// Add two wavefunctions pointwise
-    Add(Box<WFOperation<S>>, Box<WFOperation<S>>),
+    /// Sum n wavefunctions pointwise
+    Sum(Vec<WFOperation<S>>),
+    /// Sum n wavefunctions pointwise with weights
+    WeightedSum(Vec<(S::Out, WFOperation<S>)>),
     /// Subtract two wavefunctions pointwise
     Sub(Box<WFOperation<S>>, Box<WFOperation<S>>),
     /// Scale a wavefunction by a scalar
@@ -65,11 +67,18 @@ impl<S: WFSignature> WFOperation<S> {
     fn eval(&self, x: S::Space, t: S::Time) -> S::Out {
         match self {
             WFOperation::Function(f) => f(x, t),
-            WFOperation::Add(f, g) => f.eval(x.clone(), t.clone()) + g.eval(x, t),
-            WFOperation::Sub(a, b) => a.eval(x.clone(), t.clone()) - b.eval(x, t),
-            WFOperation::Mul(a, b) => a.clone() * b.eval(x, t),
-            WFOperation::Neg(a) => -a.eval(x, t),
-            WFOperation::Adjoint(a) => a.eval(x, t).conjugate(),
+            WFOperation::Sum(fs) => fs
+                .iter()
+                .map(|f| f.eval(x.clone(), t.clone()))
+                .fold(S::Out::zero(), |a, b| a + b),
+            WFOperation::WeightedSum(summands) => summands
+                .iter()
+                .map(|(c, f)| c.clone() * f.eval(x.clone(), t.clone()))
+                .fold(S::Out::zero(), |a, b| a + b),
+            WFOperation::Sub(f, g) => f.eval(x.clone(), t.clone()) - g.eval(x, t),
+            WFOperation::Mul(c, f) => c.clone() * f.eval(x, t),
+            WFOperation::Neg(f) => -f.eval(x, t),
+            WFOperation::Adjoint(f) => f.eval(x, t).conjugate(),
         }
     }
 }
@@ -126,7 +135,7 @@ where
 
     fn add(self, rhs: Self) -> Self::Output {
         WFKet {
-            wavefunction: WFOperation::Add(Box::new(self.wavefunction), Box::new(rhs.wavefunction)),
+            wavefunction: WFOperation::Sum(vec![self.wavefunction, rhs.wavefunction]),
             subdomain: self.subdomain + rhs.subdomain,
         }
     }
@@ -169,7 +178,7 @@ where
 
     fn add(self, rhs: Self) -> Self::Output {
         WFBra {
-            wavefunction: WFOperation::Add(Box::new(self.wavefunction), Box::new(rhs.wavefunction)),
+            wavefunction: WFOperation::Sum(vec![self.wavefunction, rhs.wavefunction]),
             subdomain: self.subdomain + rhs.subdomain,
         }
     }
@@ -253,10 +262,10 @@ where
 {
     type Bra = WFBra<S>;
 
-    fn adjoint(self) -> Self::Bra {
+    fn adjoint(&self) -> Self::Bra {
         Self::Bra {
-            wavefunction: WFOperation::Adjoint(Box::new(self.wavefunction)),
-            subdomain: self.subdomain,
+            wavefunction: WFOperation::Adjoint(Box::new(self.wavefunction.clone())),
+            subdomain: self.subdomain.clone(),
         }
     }
 
