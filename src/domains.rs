@@ -27,6 +27,7 @@ pub trait SubDomain<D: Domain>: Clone + Add<Output = Self> + Mul<Output = Self> 
     fn step_size(&self) -> D;
 }
 
+#[derive(Clone)]
 /// A subdomain in one dimension for an arbitrary domain D
 pub struct DomainSection1D<D: Domain> {
     /// The lower bound of the subdomain
@@ -47,9 +48,9 @@ pub struct Domain1DIter<D: Domain> {
 impl<D: Domain> Domain1DIter<D> {
     fn new(domain: &DomainSection1D<D>, step_size: D) -> Domain1DIter<D> {
         Domain1DIter {
-            upper: domain.upper.clone(),
+            upper: domain.upper,
             step_size,
-            value: domain.lower.clone(),
+            value: domain.lower,
         }
     }
 }
@@ -62,19 +63,9 @@ impl<D: Domain> Iterator for Domain1DIter<D> {
             return None;
         }
 
-        let res = self.value.clone();
-        self.value = self.value.clone() + self.step_size.clone();
+        let res = self.value;
+        self.value = self.value + self.step_size;
         Some(res)
-    }
-}
-
-impl<D: Domain> Clone for DomainSection1D<D> {
-    fn clone(&self) -> Self {
-        Self {
-            lower: self.lower.clone(),
-            upper: self.upper.clone(),
-            step_size: self.step_size.clone(),
-        }
     }
 }
 
@@ -100,11 +91,11 @@ impl<D: Domain> SubDomain<D> for DomainSection1D<D> {
     }
 
     fn iter(&self) -> impl Iterator<Item = D> {
-        Domain1DIter::new(self, self.step_size.clone())
+        Domain1DIter::new(self, self.step_size)
     }
 
     fn step_size(&self) -> D {
-        self.step_size.clone()
+        self.step_size
     }
 }
 

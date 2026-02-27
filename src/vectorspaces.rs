@@ -33,21 +33,21 @@ where
 {
     fn zero() -> Self {
         WFKet {
-            wavefunction: WFOperation::Function(Arc::new(|_, _| S::Out::zero())),
+            wavefunction: WFOperation::func(Arc::new(|_, _| S::Out::zero())),
             subdomain: S::SubDom::all(),
         }
     }
 
     fn scale(self, c: S::Out) -> Self {
         WFKet {
-            wavefunction: WFOperation::Mul(c, Box::new(self.wavefunction)),
+            wavefunction: WFOperation::scale(c, self.wavefunction),
             subdomain: self.subdomain,
         }
     }
 
     fn sum(vectors: Vec<Self>) -> Self {
         WFKet {
-            wavefunction: WFOperation::Sum(
+            wavefunction: WFOperation::sum(
                 vectors.iter().map(|v| v.wavefunction.clone()).collect(),
             ),
             subdomain: vectors
@@ -60,10 +60,10 @@ where
 
     fn weighted_sum(summands: Vec<(S::Out, Self)>) -> Self {
         WFKet {
-            wavefunction: WFOperation::WeightedSum(
+            wavefunction: WFOperation::weighted_sum(
                 summands
                     .iter()
-                    .map(|(c, v)| (c.clone(), v.wavefunction.clone()))
+                    .map(|(c, v)| (*c, v.wavefunction.clone()))
                     .collect(),
             ),
             subdomain: summands
@@ -81,21 +81,21 @@ where
 {
     fn zero() -> Self {
         WFBra {
-            wavefunction: WFOperation::Function(Arc::new(|_, _| S::Out::zero())),
+            wavefunction: WFOperation::func(Arc::new(|_, _| S::Out::zero())),
             subdomain: S::SubDom::none(),
         }
     }
 
     fn scale(self, c: S::Out) -> Self {
         WFBra {
-            wavefunction: WFOperation::Mul(c, Box::new(self.wavefunction)),
+            wavefunction: WFOperation::scale(c, self.wavefunction),
             subdomain: self.subdomain,
         }
     }
 
     fn sum(vectors: Vec<Self>) -> Self {
         WFBra {
-            wavefunction: WFOperation::Sum(
+            wavefunction: WFOperation::sum(
                 vectors.iter().map(|v| v.wavefunction.clone()).collect(),
             ),
             subdomain: vectors
@@ -108,10 +108,10 @@ where
 
     fn weighted_sum(summands: Vec<(S::Out, Self)>) -> Self {
         WFBra {
-            wavefunction: WFOperation::WeightedSum(
+            wavefunction: WFOperation::weighted_sum(
                 summands
                     .iter()
-                    .map(|(c, v)| (c.clone(), v.wavefunction.clone()))
+                    .map(|(c, v)| (*c, v.wavefunction.clone()))
                     .collect(),
             ),
             subdomain: summands

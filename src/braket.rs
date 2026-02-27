@@ -48,39 +48,93 @@ pub trait Bra<S: WFSignature>: VectorSpace<S::Out> {
 
 /// Operations that can be done on the wavefunctions underlying bras (covectors) and kets (vectors)
 #[derive(Clone)]
-pub enum WFOperation<S: WFSignature> {
+pub struct WFOperation<S: WFSignature>(WFOperationInner<S>);
+
+#[derive(Clone)]
+enum WFOperationInner<S: WFSignature> {
     /// A constant in the function space (i.e., a function from (Space x Time) --> Out)
     Function(Arc<WFFunc<S>>),
     /// Sum n wavefunctions pointwise
-    Sum(Vec<WFOperation<S>>),
+    Sum(Arc<Vec<WFOperation<S>>>),
     /// Sum n wavefunctions pointwise with weights
-    WeightedSum(Vec<(S::Out, WFOperation<S>)>),
+    WeightedSum(Arc<Vec<(S::Out, WFOperation<S>)>>),
     /// Subtract two wavefunctions pointwise
-    Sub(Box<WFOperation<S>>, Box<WFOperation<S>>),
+    Sub(Arc<WFOperation<S>>, Arc<WFOperation<S>>),
     /// Scale a wavefunction by a scalar
-    Mul(S::Out, Box<WFOperation<S>>),
+    Scale(S::Out, Arc<WFOperation<S>>),
     /// Negate a wavefunction pointwise
-    Neg(Box<WFOperation<S>>),
+    Neg(Arc<WFOperation<S>>),
     /// Take the adjoin of a wavefunction (conjugate pointwise)
-    Adjoint(Box<WFOperation<S>>),
+    Adjoint(Arc<WFOperation<S>>),
+}
+
+impl<S: WFSignature> WFOperation<S> {
+    /// A constant in the function space (i.e., a function from (Space x Time) --> Out)
+    pub fn func(f: Arc<WFFunc<S>>) -> Self {
+        Self(WFOperationInner::Function(f))
+    }
+
+    /// Sum n wavefunctions pointwise
+    pub fn sum(summands: Vec<Self>) -> Self {
+        Self(WFOperationInner::Sum(Arc::new(summands)))
+    }
+
+    /// Sum n wavefunctions pointwise with weights
+    pub fn weighted_sum(summands: Vec<(S::Out, Self)>) -> Self {
+        Self(WFOperationInner::WeightedSum(Arc::new(summands)))
+    }
+
+    /// Scale a wavefunction by a scalar
+    pub fn scale(s: S::Out, op: Self) -> Self {
+        Self(WFOperationInner::Scale(s, Arc::new(op)))
+    }
+
+    /// Take the adjoin of a wavefunction (conjugate pointwise)
+    pub fn adjoint(f: Self) -> Self {
+        Self(WFOperationInner::Adjoint(Arc::new(f)))
+    }
+}
+
+impl<S: WFSignature> Add for WFOperation<S> {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self::sum(vec![self, rhs])
+    }
+}
+
+impl<S: WFSignature> Sub for WFOperation<S> {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(WFOperationInner::Sub(Arc::new(self), Arc::new(rhs)))
+    }
+}
+
+impl<S: WFSignature> Neg for WFOperation<S> {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        Self(WFOperationInner::Neg(Arc::new(self)))
+    }
 }
 
 impl<S: WFSignature> WFOperation<S> {
     fn eval(&self, x: S::Space, t: S::Time) -> S::Out {
-        match self {
-            WFOperation::Function(f) => f(x, t),
-            WFOperation::Sum(fs) => fs
+        match &self.0 {
+            WFOperationInner::Function(f) => f(x, t),
+            WFOperationInner::Sum(fs) => fs
                 .iter()
                 .map(|f| f.eval(x, t))
                 .fold(S::Out::zero(), |a, b| a + b),
-            WFOperation::WeightedSum(summands) => summands
+            WFOperationInner::WeightedSum(summands) => summands
                 .iter()
                 .map(|(c, f)| *c * f.eval(x, t))
                 .fold(S::Out::zero(), |a, b| a + b),
-            WFOperation::Sub(f, g) => f.eval(x, t) - g.eval(x, t),
-            WFOperation::Mul(c, f) => *c * f.eval(x, t),
-            WFOperation::Neg(f) => -f.eval(x, t),
-            WFOperation::Adjoint(f) => f.eval(x, t).conjugate(),
+            WFOperationInner::Sub(f, g) => f.eval(x, t) - g.eval(x, t),
+            WFOperationInner::Scale(c, f) => *c * f.eval(x, t),
+            WFOperationInner::Neg(f) => -f.eval(x, t),
+            WFOperationInner::Adjoint(f) => f.eval(x, t).conjugate(),
         }
     }
 }
@@ -137,7 +191,7 @@ where
 
     fn add(self, rhs: Self) -> Self::Output {
         WFKet {
-            wavefunction: WFOperation::Sum(vec![self.wavefunction, rhs.wavefunction]),
+            wavefunction: self.wavefunction + rhs.wavefunction,
             subdomain: self.subdomain + rhs.subdomain,
         }
     }
@@ -151,7 +205,7 @@ where
 
     fn sub(self, rhs: Self) -> Self::Output {
         WFKet {
-            wavefunction: WFOperation::Sub(Box::new(self.wavefunction), Box::new(rhs.wavefunction)),
+            wavefunction: self.wavefunction - rhs.wavefunction,
             #[allow(clippy::suspicious_arithmetic_impl)]
             subdomain: self.subdomain + rhs.subdomain,
         }
@@ -166,7 +220,7 @@ where
 
     fn neg(self) -> Self::Output {
         WFKet {
-            wavefunction: WFOperation::Neg(Box::new(self.wavefunction)),
+            wavefunction: -self.wavefunction,
             subdomain: self.subdomain,
         }
     }
@@ -180,7 +234,7 @@ where
 
     fn add(self, rhs: Self) -> Self::Output {
         WFBra {
-            wavefunction: WFOperation::Sum(vec![self.wavefunction, rhs.wavefunction]),
+            wavefunction: self.wavefunction + rhs.wavefunction,
             subdomain: self.subdomain + rhs.subdomain,
         }
     }
@@ -194,7 +248,7 @@ where
 
     fn sub(self, rhs: Self) -> Self::Output {
         WFBra {
-            wavefunction: WFOperation::Sub(Box::new(self.wavefunction), Box::new(rhs.wavefunction)),
+            wavefunction: self.wavefunction - rhs.wavefunction,
             #[allow(clippy::suspicious_arithmetic_impl)]
             subdomain: self.subdomain + rhs.subdomain,
         }
@@ -209,7 +263,7 @@ where
 
     fn neg(self) -> Self::Output {
         WFBra {
-            wavefunction: WFOperation::Neg(Box::new(self.wavefunction)),
+            wavefunction: -self.wavefunction,
             subdomain: self.subdomain,
         }
     }
@@ -245,7 +299,7 @@ where
     }
 
     #[cfg(feature = "par_braket")]
-    fn apply(self, ket: Self::Ket, t: S::Time) -> S::Out {
+    fn apply(&self, ket: &Self::Ket, t: S::Time) -> S::Out {
         let domain = ket.subdomain.clone() * self.subdomain.clone();
         domain
             .iter()
@@ -266,7 +320,7 @@ where
 
     fn to_adjoint(self) -> Self::Bra {
         Self::Bra {
-            wavefunction: WFOperation::Adjoint(Box::new(self.wavefunction)),
+            wavefunction: WFOperation::adjoint(self.wavefunction),
             subdomain: self.subdomain,
         }
     }
@@ -277,7 +331,7 @@ where
     
     fn adjoint(ket: &Self) -> Self::Bra {
         Self::Bra {
-            wavefunction: WFOperation::Adjoint(Box::new(ket.wavefunction.clone())),
+            wavefunction: WFOperation::adjoint(ket.wavefunction.clone()),
             subdomain: ket.subdomain.clone(),
         }
     }

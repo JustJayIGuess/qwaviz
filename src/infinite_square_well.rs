@@ -50,7 +50,7 @@ impl InfiniteSquareWell {
         let mass = self.mass;
         let hbar = self.hbar;
         Ket1D {
-            wavefunction: WFOperation::Function(Arc::new(move |x, t| {
+            wavefunction: WFOperation::func(Arc::new(move |x, t| {
                 eigenfunction(x, t, width, mass, hbar, n)
             })),
             subdomain: SubDom {
@@ -66,7 +66,7 @@ impl InfiniteSquareWell {
         let mass = self.mass;
         let hbar = self.hbar;
         Ket1D {
-            wavefunction: WFOperation::Function(Arc::new(move |x, t| {
+            wavefunction: WFOperation::func(Arc::new(move |x, t| {
                 eigenfunction(x, t, initial_width, mass, hbar, n)
             })),
             subdomain: SubDom {
