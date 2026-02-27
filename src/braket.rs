@@ -83,7 +83,7 @@ where
     /// The wavefunction underlying this ket
     pub wavefunction: WFOperation<S>,
     /// The subset of the domain where this ket is defined.
-    pub domain: S::SubDom,
+    pub subdomain: S::SubDom,
 }
 
 /// A bra (covector) holding a wavefunction
@@ -95,12 +95,12 @@ where
     /// The wavefunction underlying this bra
     pub wavefunction: WFOperation<S>,
     /// The subset of the domain where this bra is defined
-    pub domain: S::SubDom,
+    pub subdomain: S::SubDom,
 }
 
 impl<S: WFSignature> Wavefunction<S> for WFKet<S> {
     fn f(&self, x: S::Space, t: S::Time) -> S::Out {
-        if self.domain.contains(x.clone()) {
+        if self.subdomain.contains(x.clone()) {
             self.wavefunction.eval(x, t)
         } else {
             S::Out::zero()
@@ -110,7 +110,7 @@ impl<S: WFSignature> Wavefunction<S> for WFKet<S> {
 
 impl<S: WFSignature> Wavefunction<S> for WFBra<S> {
     fn f(&self, x: S::Space, t: S::Time) -> S::Out {
-        if self.domain.contains(x.clone()) {
+        if self.subdomain.contains(x.clone()) {
             self.wavefunction.eval(x, t)
         } else {
             S::Out::zero()
@@ -127,7 +127,7 @@ where
     fn add(self, rhs: Self) -> Self::Output {
         WFKet {
             wavefunction: WFOperation::Add(Box::new(self.wavefunction), Box::new(rhs.wavefunction)),
-            domain: self.domain + rhs.domain,
+            subdomain: self.subdomain + rhs.subdomain,
         }
     }
 }
@@ -142,7 +142,7 @@ where
         WFKet {
             wavefunction: WFOperation::Sub(Box::new(self.wavefunction), Box::new(rhs.wavefunction)),
             #[allow(clippy::suspicious_arithmetic_impl)]
-            domain: self.domain + rhs.domain,
+            subdomain: self.subdomain + rhs.subdomain,
         }
     }
 }
@@ -156,7 +156,7 @@ where
     fn neg(self) -> Self::Output {
         WFKet {
             wavefunction: WFOperation::Neg(Box::new(self.wavefunction)),
-            domain: self.domain,
+            subdomain: self.subdomain,
         }
     }
 }
@@ -170,7 +170,7 @@ where
     fn add(self, rhs: Self) -> Self::Output {
         WFBra {
             wavefunction: WFOperation::Add(Box::new(self.wavefunction), Box::new(rhs.wavefunction)),
-            domain: self.domain + rhs.domain,
+            subdomain: self.subdomain + rhs.subdomain,
         }
     }
 }
@@ -185,7 +185,7 @@ where
         WFBra {
             wavefunction: WFOperation::Sub(Box::new(self.wavefunction), Box::new(rhs.wavefunction)),
             #[allow(clippy::suspicious_arithmetic_impl)]
-            domain: self.domain + rhs.domain,
+            subdomain: self.subdomain + rhs.subdomain,
         }
     }
 }
@@ -199,7 +199,7 @@ where
     fn neg(self) -> Self::Output {
         WFBra {
             wavefunction: WFOperation::Neg(Box::new(self.wavefunction)),
-            domain: self.domain,
+            subdomain: self.subdomain,
         }
     }
 }
@@ -220,7 +220,7 @@ where
 
     #[cfg(not(feature = "par_braket"))]
     fn apply(self, ket: Self::Ket, t: S::Time) -> S::Out {
-        let domain = ket.domain.clone() * self.domain.clone();
+        let domain = ket.subdomain.clone() * self.subdomain.clone();
         domain
             .iter()
             .map(|x| {
@@ -235,7 +235,7 @@ where
 
     #[cfg(feature = "par_braket")]
     fn apply(self, ket: Self::Ket, t: S::Time) -> S::Out {
-        let domain = ket.domain.clone() * self.domain.clone();
+        let domain = ket.subdomain.clone() * self.subdomain.clone();
         domain
             .iter()
             .par_bridge()
@@ -256,7 +256,7 @@ where
     fn adjoint(self) -> Self::Bra {
         Self::Bra {
             wavefunction: WFOperation::Adjoint(Box::new(self.wavefunction)),
-            domain: self.domain,
+            subdomain: self.subdomain,
         }
     }
 

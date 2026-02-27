@@ -31,14 +31,14 @@ where
     fn zero() -> Self {
         WFKet {
             wavefunction: WFOperation::Function(Arc::new(|_, _| S::Out::zero())),
-            domain: S::SubDom::all(),
+            subdomain: S::SubDom::all(),
         }
     }
 
     fn scale(self, c: S::Out) -> Self {
         WFKet {
             wavefunction: WFOperation::Mul(c, Box::new(self.wavefunction)),
-            domain: self.domain,
+            subdomain: self.subdomain,
         }
     }
 }
@@ -50,14 +50,14 @@ where
     fn zero() -> Self {
         WFBra {
             wavefunction: WFOperation::Function(Arc::new(|_, _| S::Out::zero())),
-            domain: S::SubDom::none(),
+            subdomain: S::SubDom::none(),
         }
     }
 
     fn scale(self, c: S::Out) -> Self {
         WFBra {
             wavefunction: WFOperation::Mul(c, Box::new(self.wavefunction)),
-            domain: self.domain,
+            subdomain: self.subdomain,
         }
     }
 }
