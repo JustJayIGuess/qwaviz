@@ -8,8 +8,9 @@ use rayon::iter::{ParallelBridge, ParallelIterator};
 
 use crate::{
     domains::{Domain, DomainSection},
+    fields::Field,
     signatures::WFSignature,
-    vectorspace::{Field, VectorSpace},
+    vectorspaces::VectorSpace,
 };
 
 pub trait Wavefunction<S: WFSignature> {
@@ -153,30 +154,6 @@ where
     }
 }
 
-impl<S> VectorSpace<S::Out> for WFKet<S>
-where
-    S: WFSignature,
-{
-    fn zero() -> Self {
-        WFKet {
-            operation: KetOperation::Function {
-                a: Arc::new(|_, _| S::Out::zero()),
-            },
-            domain: S::Dom::all(),
-        }
-    }
-
-    fn scale(self, c: S::Out) -> Self {
-        WFKet {
-            operation: KetOperation::Mul {
-                a: c,
-                b: Box::new(self.operation),
-            },
-            domain: self.domain,
-        }
-    }
-}
-
 impl<S> Add for WFBra<S>
 where
     S: WFSignature,
@@ -221,30 +198,6 @@ where
         WFBra {
             operation: KetOperation::Neg {
                 a: Box::new(self.operation),
-            },
-            domain: self.domain,
-        }
-    }
-}
-
-impl<S> VectorSpace<S::Out> for WFBra<S>
-where
-    S: WFSignature,
-{
-    fn zero() -> Self {
-        WFBra {
-            operation: KetOperation::Function {
-                a: Arc::new(|_, _| S::Out::zero()),
-            },
-            domain: S::Dom::none(),
-        }
-    }
-
-    fn scale(self, c: S::Out) -> Self {
-        WFBra {
-            operation: KetOperation::Mul {
-                a: c,
-                b: Box::new(self.operation),
             },
             domain: self.domain,
         }

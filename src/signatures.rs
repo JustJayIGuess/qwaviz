@@ -2,7 +2,7 @@ use num_complex::Complex32;
 
 use crate::{
     domains::{Domain, DomainSection, DomainSection1D},
-    vectorspace::Field,
+    fields::Field,
 };
 
 pub trait WFSignature: Clone {

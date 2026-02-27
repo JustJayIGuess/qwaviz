@@ -1,6 +1,23 @@
+use std::ops::{Add, Div, Mul, Neg, Sub};
+
 use num_complex::Complex32;
 
-use crate::vectorspace::Field;
+pub trait Field:
+    Sized
+    + Clone
+    + PartialEq
+    + Add<Output = Self>
+    + Sub<Output = Self>
+    + Mul<Output = Self>
+    + Div<Output = Self>
+    + Neg<Output = Self>
+{
+    fn zero() -> Self;
+    fn one() -> Self;
+    fn inv(&self) -> Option<Self>;
+    fn is_zero(&self) -> bool;
+    fn conjugate(self) -> Self;
+}
 
 impl Field for f32 {
     fn zero() -> Self {

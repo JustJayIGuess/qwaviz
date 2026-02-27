@@ -6,14 +6,14 @@ use crate::{
     braket::{Ket, KetOperation, WFKet, Wavefunction},
     domains::DomainSection1D,
     signatures::WF1Space1Time,
-    vectorspace::VectorSpace,
+    vectorspaces::VectorSpace,
 };
 
 pub mod braket;
 pub mod domains;
 pub mod fields;
 pub mod signatures;
-pub mod vectorspace;
+pub mod vectorspaces;
 
 fn get_isw_eigenstate(width: f32, mass: f32, hbar: f32, n: u32) -> WFKet<WF1Space1Time> {
     WFKet {
