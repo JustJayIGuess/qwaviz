@@ -17,8 +17,10 @@ pub trait VectorSpace<F: Field>:
     Clone + Add<Output = Self> + Sub<Output = Self> + Neg<Output = Self>
 {
     /// The additive identity of the vectorspace
+    #[must_use]
     fn zero() -> Self;
     /// Scale this vector by a scalar
+    #[must_use]
     fn scale(self, c: F) -> Self;
 }
 

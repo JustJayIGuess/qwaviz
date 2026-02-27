@@ -16,14 +16,17 @@ pub trait Field:
     + Neg<Output = Self>
 {
     /// The additive identity of the field
+    #[must_use]
     fn zero() -> Self;
     /// The multiplicative identity of the field
+    #[must_use]
     fn one() -> Self;
     /// The multiplicative inverse of this element
     fn inv(&self) -> Option<Self>;
     /// Check if element is the zero of the field
     fn is_zero(&self) -> bool;
     /// Take conjugate of the element.
+    #[must_use]
     fn conjugate(self) -> Self;
 }
 

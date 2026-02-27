@@ -21,7 +21,7 @@ pub mod vectorspaces;
 
 type Ket1D = WFKet<WF1Space1Time>;
 
-fn get_isw_eigenstate(width: f32, mass: f32, hbar: f32, n: u32) -> Ket1D {
+fn get_isw_eigenstate(width: f32, mass: f32, hbar: f32, n: usize) -> Ket1D {
     Ket1D {
         wavefunction: WFOperation::Function(Arc::new(move |x, t| {
             let energy = (n as f32 * PI * hbar / width).powi(2) / (2.0 * mass);
@@ -54,7 +54,7 @@ fn main() {
 
     let ket_0 = get_expansion_state(1.0);
     let eigenkets: [Ket1D; MAX_N] =
-        std::array::from_fn(|i| get_isw_eigenstate(1.0, 1.0, 1.0, (i + 1) as u32));
+        std::array::from_fn(|i| get_isw_eigenstate(1.0, 1.0, 1.0, i + 1));
     let mut coefs: [Complex32; MAX_N] = [Complex32::ZERO; MAX_N];
 
     let time_find_coefs = Instant::now();
@@ -62,7 +62,7 @@ fn main() {
         coefs[i] = ket.clone().adjoint() * ket_0.clone();
         println!("C_{}: {}", i + 1, coefs[i]);
     }
-    println!("Find coefs: {:?}", Instant::now() - time_find_coefs);
+    println!("Find coefs: {:?}", time_find_coefs.elapsed());
 
     let eigenbasis_ket = eigenkets
         .iter()
@@ -78,6 +78,6 @@ fn main() {
     }
     println!(
         "Recompute coefs: {:?}",
-        Instant::now() - time_recompute_coefs
+        time_recompute_coefs.elapsed()
     );
 }
