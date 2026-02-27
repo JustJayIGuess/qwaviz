@@ -4,7 +4,7 @@ use std::ops::{Add, Mul};
 /// Trait describing properties of the domain of a wavefunction.
 /// Note that partial ordering and addition are needed to iterate over the domain;
 /// for finite domains, these can be defined by assigning an arbitrary ordering.
-pub trait Domain: Sized + PartialOrd + Clone + Add<Output = Self> + Send + Sync {
+pub trait Domain: Sized + PartialOrd + Clone + Copy + Add<Output = Self> + Send + Sync {
     /// The lower bound of the domain
     fn first() -> Self;
     /// The upper bound of the domain

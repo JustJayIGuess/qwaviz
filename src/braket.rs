@@ -31,7 +31,9 @@ pub trait Ket<S: WFSignature>: VectorSpace<S::Out> {
     /// The corresponding bra (covector) type
     type Bra: Bra<S>;
     /// Convert to corresponding bra (covector)
-    fn adjoint(&self) -> Self::Bra;
+    fn to_adjoint(self) -> Self::Bra;
+    /// Create corresponding bra (covector) of a ket (vector)
+    fn adjoint(ket: &Self) -> Self::Bra;
     /// Compute the squared norm using the standard inner product
     fn norm_sqr(&self, t: S::Time) -> S::Out;
 }
@@ -41,7 +43,7 @@ pub trait Bra<S: WFSignature>: VectorSpace<S::Out> {
     /// The corresponding ket (vector) type
     type Ket: Ket<S>;
     /// Apply this bra (covector) to a ket (vector) to produce an element of the field.
-    fn apply(self, ket: Self::Ket, t: S::Time) -> S::Out;
+    fn apply(&self, ket: &Self::Ket, t: S::Time) -> S::Out;
 }
 
 /// Operations that can be done on the wavefunctions underlying bras (covectors) and kets (vectors)
@@ -69,14 +71,14 @@ impl<S: WFSignature> WFOperation<S> {
             WFOperation::Function(f) => f(x, t),
             WFOperation::Sum(fs) => fs
                 .iter()
-                .map(|f| f.eval(x.clone(), t.clone()))
+                .map(|f| f.eval(x, t))
                 .fold(S::Out::zero(), |a, b| a + b),
             WFOperation::WeightedSum(summands) => summands
                 .iter()
-                .map(|(c, f)| c.clone() * f.eval(x.clone(), t.clone()))
+                .map(|(c, f)| *c * f.eval(x, t))
                 .fold(S::Out::zero(), |a, b| a + b),
-            WFOperation::Sub(f, g) => f.eval(x.clone(), t.clone()) - g.eval(x, t),
-            WFOperation::Mul(c, f) => c.clone() * f.eval(x, t),
+            WFOperation::Sub(f, g) => f.eval(x, t) - g.eval(x, t),
+            WFOperation::Mul(c, f) => *c * f.eval(x, t),
             WFOperation::Neg(f) => -f.eval(x, t),
             WFOperation::Adjoint(f) => f.eval(x, t).conjugate(),
         }
@@ -109,7 +111,7 @@ where
 
 impl<S: WFSignature> Wavefunction<S> for WFKet<S> {
     fn f(&self, x: S::Space, t: S::Time) -> S::Out {
-        if self.subdomain.contains(x.clone()) {
+        if self.subdomain.contains(x) {
             self.wavefunction.eval(x, t)
         } else {
             S::Out::zero()
@@ -119,7 +121,7 @@ impl<S: WFSignature> Wavefunction<S> for WFKet<S> {
 
 impl<S: WFSignature> Wavefunction<S> for WFBra<S> {
     fn f(&self, x: S::Space, t: S::Time) -> S::Out {
-        if self.subdomain.contains(x.clone()) {
+        if self.subdomain.contains(x) {
             self.wavefunction.eval(x, t)
         } else {
             S::Out::zero()
@@ -213,10 +215,10 @@ where
     }
 }
 
-impl<S: WFSignature> Mul<WFKet<S>> for WFBra<S> {
+impl<S: WFSignature> Mul<&WFKet<S>> for &WFBra<S> {
     type Output = S::Out;
 
-    fn mul(self, rhs: WFKet<S>) -> Self::Output {
+    fn mul(self, rhs: &WFKet<S>) -> Self::Output {
         self.apply(rhs, S::Time::zero())
     }
 }
@@ -228,14 +230,14 @@ where
     type Ket = WFKet<S>;
 
     #[cfg(not(feature = "par_braket"))]
-    fn apply(self, ket: Self::Ket, t: S::Time) -> S::Out {
+    fn apply(&self, ket: &Self::Ket, t: S::Time) -> S::Out {
         let domain = ket.subdomain.clone() * self.subdomain.clone();
         domain
             .iter()
             .map(|x| {
                 S::mul_to_codomain(
                     domain.step_size(),
-                    self.f(x.clone(), t.clone()) * ket.f(x, t.clone()),
+                    self.f(x, t) * ket.f(x, t),
                 )
             })
             .reduce(|a, b| a + b)
@@ -249,8 +251,8 @@ where
             .iter()
             .par_bridge()
             .map(|x| {
-                S::mul_to_codomain(domain.step_size(), self.f(x.clone(), t.clone()))
-                    * ket.f(x, t.clone())
+                S::mul_to_codomain(domain.step_size(), self.f(x, t))
+                    * ket.f(x, t)
             })
             .reduce(|| S::Out::zero(), |a, b| a + b)
     }
@@ -262,14 +264,21 @@ where
 {
     type Bra = WFBra<S>;
 
-    fn adjoint(&self) -> Self::Bra {
+    fn to_adjoint(self) -> Self::Bra {
         Self::Bra {
-            wavefunction: WFOperation::Adjoint(Box::new(self.wavefunction.clone())),
-            subdomain: self.subdomain.clone(),
+            wavefunction: WFOperation::Adjoint(Box::new(self.wavefunction)),
+            subdomain: self.subdomain,
         }
     }
 
     fn norm_sqr(&self, t: S::Time) -> S::Out {
-        self.clone().adjoint().apply(self.clone(), t)
+        Self::adjoint(self).apply(self, t)
+    }
+    
+    fn adjoint(ket: &Self) -> Self::Bra {
+        Self::Bra {
+            wavefunction: WFOperation::Adjoint(Box::new(ket.wavefunction.clone())),
+            subdomain: ket.subdomain.clone(),
+        }
     }
 }

@@ -5,7 +5,7 @@ use std::{f32::consts::PI, sync::Arc};
 use num_complex::Complex32;
 
 use crate::{
-    braket::{Ket, WFKet, WFOperation},
+    braket::{Bra, Ket, WFKet, WFOperation},
     signatures::{WF1Space1Time, WFSignature},
     vectorspaces::VectorSpace,
 };
@@ -78,12 +78,12 @@ impl InfiniteSquareWell {
     }
 
     /// Return a state which evolves from initial_state(t=0) according to the Schrodinger equation
-    pub fn evolve_state_from_zero(&self, initial_state: &Ket1D, max_n: usize) -> Ket1D {
+    pub fn evolve_state_from_t(&self, initial_state: &Ket1D, t0: f32, max_n: usize) -> Ket1D {
         let coef_eigenkets: Vec<(Complex32, Ket1D)> = (1..=max_n)
             .map(|i| {
                 let basis_state = self.eigenstate(i);
                 (
-                    basis_state.clone().adjoint() * initial_state.clone(),
+                    Ket1D::adjoint(&basis_state).apply(initial_state, t0),
                     basis_state,
                 )
             })

@@ -14,8 +14,9 @@ pub mod vectorspaces;
 
 fn main() {
     let time_create_ket = Instant::now();
-    let isw = InfiniteSquareWell::new(1.0, 1.0, 1.0, 1.0 / 128.0);
+    let isw = InfiniteSquareWell::new(1.0, 1.0, 1.0, 1.0 / 1000.0);
     let ket_0 = isw.expansion_state(0.5, 1);
-    let _ = isw.evolve_state_from_zero(&ket_0, 128);
+    let ket_1 = isw.evolve_state_from_t(&ket_0, 0.0, 128);
+    let _ = isw.evolve_state_from_t(&ket_1, 0.0, 128);
     println!("Create ket: {:?}", time_create_ket.elapsed());
 }
