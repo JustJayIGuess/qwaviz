@@ -8,6 +8,7 @@ use num_complex::Complex32;
 pub trait Field:
     Sized
     + Clone
+    + Copy
     + PartialEq
     + Add<Output = Self>
     + Sub<Output = Self>

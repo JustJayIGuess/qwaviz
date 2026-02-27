@@ -17,11 +17,14 @@ pub trait VectorSpace<F: Field>:
     Clone + Add<Output = Self> + Sub<Output = Self> + Neg<Output = Self>
 {
     /// The additive identity of the vectorspace
-    #[must_use]
     fn zero() -> Self;
     /// Scale this vector by a scalar
     #[must_use]
     fn scale(self, c: F) -> Self;
+    /// Sum many vectors together
+    fn sum(vectors: Vec<Self>) -> Self;
+    /// Sum many vectors together with given weights
+    fn weighted_sum(summands: Vec<(F, Self)>) -> Self;
 }
 
 impl<S> VectorSpace<S::Out> for WFKet<S>
@@ -30,15 +33,44 @@ where
 {
     fn zero() -> Self {
         WFKet {
-            wavefunction: WFOperation::Function(Arc::new(|_, _| S::Out::zero())),
-            domain: S::SubDom::all(),
+            wavefunction: WFOperation::func(Arc::new(|_, _| S::Out::zero())),
+            subdomain: S::SubDom::all(),
         }
     }
 
     fn scale(self, c: S::Out) -> Self {
         WFKet {
-            wavefunction: WFOperation::Mul(c, Box::new(self.wavefunction)),
-            domain: self.domain,
+            wavefunction: WFOperation::scale(c, self.wavefunction),
+            subdomain: self.subdomain,
+        }
+    }
+
+    fn sum(vectors: Vec<Self>) -> Self {
+        WFKet {
+            wavefunction: WFOperation::sum(
+                vectors.iter().map(|v| v.wavefunction.clone()).collect(),
+            ),
+            subdomain: vectors
+                .iter()
+                .map(|v| v.subdomain.clone())
+                .reduce(|a, b| a + b)
+                .unwrap_or_else(S::SubDom::none),
+        }
+    }
+
+    fn weighted_sum(summands: Vec<(S::Out, Self)>) -> Self {
+        WFKet {
+            wavefunction: WFOperation::weighted_sum(
+                summands
+                    .iter()
+                    .map(|(c, v)| (*c, v.wavefunction.clone()))
+                    .collect(),
+            ),
+            subdomain: summands
+                .iter()
+                .map(|(_, v)| v.subdomain.clone())
+                .reduce(|a, b| a + b)
+                .unwrap_or_else(S::SubDom::none),
         }
     }
 }
@@ -49,15 +81,44 @@ where
 {
     fn zero() -> Self {
         WFBra {
-            wavefunction: WFOperation::Function(Arc::new(|_, _| S::Out::zero())),
-            domain: S::SubDom::none(),
+            wavefunction: WFOperation::func(Arc::new(|_, _| S::Out::zero())),
+            subdomain: S::SubDom::none(),
         }
     }
 
     fn scale(self, c: S::Out) -> Self {
         WFBra {
-            wavefunction: WFOperation::Mul(c, Box::new(self.wavefunction)),
-            domain: self.domain,
+            wavefunction: WFOperation::scale(c, self.wavefunction),
+            subdomain: self.subdomain,
+        }
+    }
+
+    fn sum(vectors: Vec<Self>) -> Self {
+        WFBra {
+            wavefunction: WFOperation::sum(
+                vectors.iter().map(|v| v.wavefunction.clone()).collect(),
+            ),
+            subdomain: vectors
+                .iter()
+                .map(|v| v.subdomain.clone())
+                .reduce(|a, b| a + b)
+                .unwrap_or_else(S::SubDom::none),
+        }
+    }
+
+    fn weighted_sum(summands: Vec<(S::Out, Self)>) -> Self {
+        WFBra {
+            wavefunction: WFOperation::weighted_sum(
+                summands
+                    .iter()
+                    .map(|(c, v)| (*c, v.wavefunction.clone()))
+                    .collect(),
+            ),
+            subdomain: summands
+                .iter()
+                .map(|(_, v)| v.subdomain.clone())
+                .reduce(|a, b| a + b)
+                .unwrap_or_else(S::SubDom::none),
         }
     }
 }
