@@ -1,3 +1,6 @@
+//! Functionality for representing Bras and Kets (covectors and vectors).
+//! Includes implementation of Bras and Kets in 1(+1)-D function spaces.
+
 use std::{
     ops::{Add, Mul, Neg, Sub},
     sync::Arc,
@@ -7,87 +10,98 @@ use std::{
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
 use crate::{
-    domains::{Domain, DomainSection},
+    domains::{Domain, SubDomain},
     fields::Field,
     signatures::WFSignature,
     vectorspaces::VectorSpace,
 };
 
+type WFFunc<S> = dyn Fn(<S as WFSignature>::Space, <S as WFSignature>::Time) -> <S as WFSignature>::Out
+    + Send
+    + Sync;
+
+/// Require ability to evaluate a wavefunction at points in domain
 pub trait Wavefunction<S: WFSignature> {
+    /// Evaluate the wavefunction at a point in space and time
     fn f(&self, x: S::Space, t: S::Time) -> S::Out;
 }
 
+/// A ket (vector) in a function vectorspace
 pub trait Ket<S: WFSignature>: VectorSpace<S::Out> {
+    /// The corresponding bra (covector) type
     type Bra: Bra<S>;
+    /// Convert to corresponding bra (covector)
     fn adjoint(self) -> Self::Bra;
+    /// Compute the squared norm using the standard inner product
     fn norm_sqr(&self, t: S::Time) -> S::Out;
 }
 
+/// A bra (covector) in the dual of a function vectorspace
 pub trait Bra<S: WFSignature>: VectorSpace<S::Out> {
+    /// The corresponding ket (vector) type
     type Ket: Ket<S>;
+    /// Apply this bra (covector) to a ket (vector) to produce an element of the field.
     fn apply(self, ket: Self::Ket, t: S::Time) -> S::Out;
 }
 
+/// Operations that can be done on the wavefunctions underlying bras (covectors) and kets (vectors)
 #[derive(Clone)]
-pub enum KetOperation<S: WFSignature> {
-    Function {
-        a: Arc<dyn Fn(S::Space, S::Time) -> S::Out + Send + Sync>,
-    },
-    Add {
-        a: Box<KetOperation<S>>,
-        b: Box<KetOperation<S>>,
-    },
-    Sub {
-        a: Box<KetOperation<S>>,
-        b: Box<KetOperation<S>>,
-    },
-    Mul {
-        a: S::Out,
-        b: Box<KetOperation<S>>,
-    },
-    Neg {
-        a: Box<KetOperation<S>>,
-    },
-    Adjoint {
-        a: Box<KetOperation<S>>,
-    },
+pub enum WFOperation<S: WFSignature> {
+    /// A constant in the function space (i.e., a function from (Space x Time) --> Out)
+    Function(Arc<WFFunc<S>>),
+    /// Add two wavefunctions pointwise
+    Add(Box<WFOperation<S>>, Box<WFOperation<S>>),
+    /// Subtract two wavefunctions pointwise
+    Sub(Box<WFOperation<S>>, Box<WFOperation<S>>),
+    /// Scale a wavefunction by a scalar
+    Mul(S::Out, Box<WFOperation<S>>),
+    /// Negate a wavefunction pointwise
+    Neg(Box<WFOperation<S>>),
+    /// Take the adjoin of a wavefunction (conjugate pointwise)
+    Adjoint(Box<WFOperation<S>>),
 }
 
-impl<S: WFSignature> KetOperation<S> {
+impl<S: WFSignature> WFOperation<S> {
     fn eval(&self, x: S::Space, t: S::Time) -> S::Out {
         match self {
-            KetOperation::Function { a } => a(x, t),
-            KetOperation::Add { a, b } => a.eval(x.clone(), t.clone()) + b.eval(x, t),
-            KetOperation::Sub { a, b } => a.eval(x.clone(), t.clone()) - b.eval(x, t),
-            KetOperation::Mul { a, b } => a.clone() * b.eval(x, t),
-            KetOperation::Neg { a } => -a.eval(x, t),
-            KetOperation::Adjoint { a } => a.eval(x, t).conjugate(),
+            WFOperation::Function(f) => f(x, t),
+            WFOperation::Add(f, g) => f.eval(x.clone(), t.clone()) + g.eval(x, t),
+            WFOperation::Sub(a, b) => a.eval(x.clone(), t.clone()) - b.eval(x, t),
+            WFOperation::Mul(a, b) => a.clone() * b.eval(x, t),
+            WFOperation::Neg(a) => -a.eval(x, t),
+            WFOperation::Adjoint(a) => a.eval(x, t).conjugate(),
         }
     }
 }
 
+/// A ket (vector) holding a wavefunction
 #[derive(Clone)]
 pub struct WFKet<S>
 where
     S: WFSignature,
 {
-    pub operation: KetOperation<S>,
-    pub domain: S::Dom,
+    /// The wavefunction underlying this ket
+    pub wavefunction: WFOperation<S>,
+    /// The subset of the domain where this ket is defined.
+    pub domain: S::SubDom,
 }
 
+/// A bra (covector) holding a wavefunction
 #[derive(Clone)]
 pub struct WFBra<S>
 where
     S: WFSignature,
 {
-    pub operation: KetOperation<S>,
-    pub domain: S::Dom,
+    /// The wavefunction underlying this bra
+    pub wavefunction: WFOperation<S>,
+    /// The subset of the domain where this bra is defined
+    pub domain: S::SubDom,
 }
 
 impl<S: WFSignature> Wavefunction<S> for WFKet<S> {
     fn f(&self, x: S::Space, t: S::Time) -> S::Out {
         if self.domain.contains(x.clone()) {
-            self.operation.eval(x, t)
+            self.wavefunction.eval(x, t)
         } else {
             S::Out::zero()
         }
@@ -97,7 +111,7 @@ impl<S: WFSignature> Wavefunction<S> for WFKet<S> {
 impl<S: WFSignature> Wavefunction<S> for WFBra<S> {
     fn f(&self, x: S::Space, t: S::Time) -> S::Out {
         if self.domain.contains(x.clone()) {
-            self.operation.eval(x, t)
+            self.wavefunction.eval(x, t)
         } else {
             S::Out::zero()
         }
@@ -112,10 +126,7 @@ where
 
     fn add(self, rhs: Self) -> Self::Output {
         WFKet {
-            operation: KetOperation::Add {
-                a: Box::new(self.operation),
-                b: Box::new(rhs.operation),
-            },
+            wavefunction: WFOperation::Add(Box::new(self.wavefunction), Box::new(rhs.wavefunction)),
             domain: self.domain + rhs.domain,
         }
     }
@@ -129,10 +140,8 @@ where
 
     fn sub(self, rhs: Self) -> Self::Output {
         WFKet {
-            operation: KetOperation::Sub {
-                a: Box::new(self.operation),
-                b: Box::new(rhs.operation),
-            },
+            wavefunction: WFOperation::Sub(Box::new(self.wavefunction), Box::new(rhs.wavefunction)),
+            #[allow(clippy::suspicious_arithmetic_impl)]
             domain: self.domain + rhs.domain,
         }
     }
@@ -146,9 +155,7 @@ where
 
     fn neg(self) -> Self::Output {
         WFKet {
-            operation: KetOperation::Neg {
-                a: Box::new(self.operation),
-            },
+            wavefunction: WFOperation::Neg(Box::new(self.wavefunction)),
             domain: self.domain,
         }
     }
@@ -162,10 +169,7 @@ where
 
     fn add(self, rhs: Self) -> Self::Output {
         WFBra {
-            operation: KetOperation::Add {
-                a: Box::new(self.operation),
-                b: Box::new(rhs.operation),
-            },
+            wavefunction: WFOperation::Add(Box::new(self.wavefunction), Box::new(rhs.wavefunction)),
             domain: self.domain + rhs.domain,
         }
     }
@@ -179,10 +183,8 @@ where
 
     fn sub(self, rhs: Self) -> Self::Output {
         WFBra {
-            operation: KetOperation::Sub {
-                a: Box::new(self.operation),
-                b: Box::new(rhs.operation),
-            },
+            wavefunction: WFOperation::Sub(Box::new(self.wavefunction), Box::new(rhs.wavefunction)),
+            #[allow(clippy::suspicious_arithmetic_impl)]
             domain: self.domain + rhs.domain,
         }
     }
@@ -196,9 +198,7 @@ where
 
     fn neg(self) -> Self::Output {
         WFBra {
-            operation: KetOperation::Neg {
-                a: Box::new(self.operation),
-            },
+            wavefunction: WFOperation::Neg(Box::new(self.wavefunction)),
             domain: self.domain,
         }
     }
@@ -230,7 +230,7 @@ where
                 )
             })
             .reduce(|a, b| a + b)
-            .unwrap_or_else(|| S::Out::zero())
+            .unwrap_or_else(S::Out::zero)
     }
 
     #[cfg(feature = "par_braket")]
@@ -255,9 +255,7 @@ where
 
     fn adjoint(self) -> Self::Bra {
         Self::Bra {
-            operation: KetOperation::Adjoint {
-                a: Box::new(self.operation),
-            },
+            wavefunction: WFOperation::Adjoint(Box::new(self.wavefunction)),
             domain: self.domain,
         }
     }

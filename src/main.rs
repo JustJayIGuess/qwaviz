@@ -1,9 +1,13 @@
+//! A test program decomposing a quantum state into an eigenbasis.
+
+#![deny(missing_docs)]
+
 use std::{f32::consts::PI, sync::Arc, time::Instant};
 
 use num_complex::Complex32;
 
 use crate::{
-    braket::{Ket, KetOperation, WFKet, Wavefunction},
+    braket::{Ket, WFKet, WFOperation, Wavefunction},
     domains::DomainSection1D,
     signatures::WF1Space1Time,
     vectorspaces::VectorSpace,
@@ -15,16 +19,16 @@ pub mod fields;
 pub mod signatures;
 pub mod vectorspaces;
 
-fn get_isw_eigenstate(width: f32, mass: f32, hbar: f32, n: u32) -> WFKet<WF1Space1Time> {
-    WFKet {
-        operation: KetOperation::Function {
-            a: Arc::new(move |x, t| {
-                let energy = (n as f32 * PI * hbar / width).powi(2) / (2.0 * mass);
-                let coef = (2.0 / width).sqrt();
-                let phase_x = n as f32 * PI * x / width;
-                coef * phase_x.sin() * Complex32::cis(-energy * t / hbar)
-            }),
-        },
+type Ket1D = WFKet<WF1Space1Time>;
+
+fn get_isw_eigenstate(width: f32, mass: f32, hbar: f32, n: u32) -> Ket1D {
+    Ket1D {
+        wavefunction: WFOperation::Function(Arc::new(move |x, t| {
+            let energy = (n as f32 * PI * hbar / width).powi(2) / (2.0 * mass);
+            let coef = (2.0 / width).sqrt();
+            let phase_x: f32 = (n as f32) * PI * x / width;
+            coef * phase_x.sin() * Complex32::cis(-energy * t / hbar)
+        })),
         domain: DomainSection1D {
             lower: 0.0,
             upper: width,
@@ -33,12 +37,10 @@ fn get_isw_eigenstate(width: f32, mass: f32, hbar: f32, n: u32) -> WFKet<WF1Spac
     }
 }
 
-fn get_expansion_state(width: f32) -> WFKet<WF1Space1Time> {
+fn get_expansion_state(width: f32) -> Ket1D {
     let psi0 = get_isw_eigenstate(width / 2.0, 1.0, 1.0, 1);
-    WFKet {
-        operation: KetOperation::Function {
-            a: Arc::new(move |x, t| psi0.f(x, t)),
-        },
+    Ket1D {
+        wavefunction: WFOperation::Function(Arc::new(move |x, t| psi0.f(x, t))),
         domain: DomainSection1D {
             lower: 0.0,
             upper: width,
@@ -48,12 +50,12 @@ fn get_expansion_state(width: f32) -> WFKet<WF1Space1Time> {
 }
 
 fn main() {
-    const MAX_EIGENSTATES: usize = 64;
+    const MAX_N: usize = 64;
 
     let ket_0 = get_expansion_state(1.0);
-    let eigenkets: [WFKet<WF1Space1Time>; MAX_EIGENSTATES] =
+    let eigenkets: [Ket1D; MAX_N] =
         std::array::from_fn(|i| get_isw_eigenstate(1.0, 1.0, 1.0, (i + 1) as u32));
-    let mut coefs: [Complex32; MAX_EIGENSTATES] = [Complex32::ZERO; MAX_EIGENSTATES];
+    let mut coefs: [Complex32; MAX_N] = [Complex32::ZERO; MAX_N];
 
     let time_find_coefs = Instant::now();
     for (i, ket) in eigenkets.iter().enumerate() {

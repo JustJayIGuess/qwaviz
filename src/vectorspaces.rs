@@ -1,19 +1,24 @@
+//! Functionality for representing abstract vector spaces
+
 use std::{
     ops::{Add, Neg, Sub},
     sync::Arc,
 };
 
 use crate::{
-    braket::{KetOperation, WFBra, WFKet},
-    domains::DomainSection,
+    braket::{WFBra, WFKet, WFOperation},
+    domains::SubDomain,
     fields::Field,
     signatures::WFSignature,
 };
 
+/// Trait implementing properties of a vectorspace over a field
 pub trait VectorSpace<F: Field>:
     Clone + Add<Output = Self> + Sub<Output = Self> + Neg<Output = Self>
 {
+    /// The additive identity of the vectorspace
     fn zero() -> Self;
+    /// Scale this vector by a scalar
     fn scale(self, c: F) -> Self;
 }
 
@@ -23,19 +28,14 @@ where
 {
     fn zero() -> Self {
         WFKet {
-            operation: KetOperation::Function {
-                a: Arc::new(|_, _| S::Out::zero()),
-            },
-            domain: S::Dom::all(),
+            wavefunction: WFOperation::Function(Arc::new(|_, _| S::Out::zero())),
+            domain: S::SubDom::all(),
         }
     }
 
     fn scale(self, c: S::Out) -> Self {
         WFKet {
-            operation: KetOperation::Mul {
-                a: c,
-                b: Box::new(self.operation),
-            },
+            wavefunction: WFOperation::Mul(c, Box::new(self.wavefunction)),
             domain: self.domain,
         }
     }
@@ -47,19 +47,14 @@ where
 {
     fn zero() -> Self {
         WFBra {
-            operation: KetOperation::Function {
-                a: Arc::new(|_, _| S::Out::zero()),
-            },
-            domain: S::Dom::none(),
+            wavefunction: WFOperation::Function(Arc::new(|_, _| S::Out::zero())),
+            domain: S::SubDom::none(),
         }
     }
 
     fn scale(self, c: S::Out) -> Self {
         WFBra {
-            operation: KetOperation::Mul {
-                a: c,
-                b: Box::new(self.operation),
-            },
+            wavefunction: WFOperation::Mul(c, Box::new(self.wavefunction)),
             domain: self.domain,
         }
     }
