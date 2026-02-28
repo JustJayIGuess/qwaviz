@@ -71,14 +71,14 @@ impl InfiniteSquareWell {
             })),
             subdomain: SubDom {
                 lower: 0.0,
-                upper: self.width,
+                upper: initial_width,
                 step_size: self.step_size,
             },
         }
     }
 
-    /// Return a state which evolves from initial_state(t=0) according to the Schrodinger equation
-    pub fn evolve_state_from_t(&self, initial_state: &Ket1D, t0: f32, max_n: usize) -> Ket1D {
+    /// Return a state which evolves from `initial_state(t=0)` according to the Schrodinger equation
+    pub fn evolution(&self, initial_state: &Ket1D, t0: f32, max_n: usize) -> Ket1D {
         let coef_eigenkets: Vec<(Complex32, Ket1D)> = (1..=max_n)
             .map(|i| {
                 let basis_state = self.eigenstate(i);

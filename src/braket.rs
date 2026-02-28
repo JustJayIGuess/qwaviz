@@ -288,12 +288,7 @@ where
         let domain = ket.subdomain.clone() * self.subdomain.clone();
         domain
             .iter()
-            .map(|x| {
-                S::mul_to_codomain(
-                    domain.step_size(),
-                    self.f(x, t) * ket.f(x, t),
-                )
-            })
+            .map(|x| S::mul_to_codomain(domain.step_size(), self.f(x, t) * ket.f(x, t)))
             .reduce(|a, b| a + b)
             .unwrap_or_else(S::Out::zero)
     }
@@ -304,10 +299,7 @@ where
         domain
             .iter()
             .par_bridge()
-            .map(|x| {
-                S::mul_to_codomain(domain.step_size(), self.f(x, t))
-                    * ket.f(x, t)
-            })
+            .map(|x| S::mul_to_codomain(domain.step_size(), self.f(x, t)) * ket.f(x, t))
             .reduce(|| S::Out::zero(), |a, b| a + b)
     }
 }
@@ -328,7 +320,7 @@ where
     fn norm_sqr(&self, t: S::Time) -> S::Out {
         Self::adjoint(self).apply(self, t)
     }
-    
+
     fn adjoint(ket: &Self) -> Self::Bra {
         Self::Bra {
             wavefunction: WFOperation::adjoint(ket.wavefunction.clone()),
