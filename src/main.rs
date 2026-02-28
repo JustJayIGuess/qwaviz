@@ -12,6 +12,7 @@ use num_complex::ComplexFloat;
 use crate::{
     braket::{WFKet, Wavefunction},
     domains::SubDomain,
+    harmonic_well::HarmonicWell,
     infinite_square_well::InfiniteSquareWell,
     potential::ConfinedPotential,
     signatures::WF1Space1Time,
@@ -20,6 +21,7 @@ use crate::{
 pub mod braket;
 pub mod domains;
 pub mod fields;
+pub mod harmonic_well;
 pub mod infinite_square_well;
 pub mod potential;
 pub mod signatures;
@@ -43,9 +45,11 @@ fn setup(
     mut polyline_materials: ResMut<Assets<PolylineMaterial>>,
     mut polylines: ResMut<Assets<Polyline>>,
 ) {
-    let isw = InfiniteSquareWell::new(1.0, 1.0, 1.0, 1.0 / 1000.0);
-    let ket_0 = isw.expansion_state(0.8, 1);
-    let ket_1 = Arc::new(isw.evolution(&ket_0, 0.0, 128));
+    let isw = InfiniteSquareWell::new(0.5, 1.0, 1.0, 1.0 / 1000.0);
+    let ket_0 = isw.eigenstate(1);
+    // let ket_1 = Arc::new(isw.evolution(&ket_0, 0.0, 128));
+    let hw = HarmonicWell::new(10.0, 1.0, 0.001, 1.0);
+    let ket_1 = Arc::new(hw.evolution(&ket_0, 0.0, 10));
 
     commands.spawn((
         PolylineBundle {
@@ -58,7 +62,7 @@ fn setup(
                 perspective: true,
                 depth_bias: -0.0002,
             })),
-            transform: Transform::from_xyz(-2.5, 0.0, 0.0).with_scale(vec3(5.0, 0.5, 0.5)),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0).with_scale(vec3(5.0, 0.5, 0.5)),
             ..Default::default()
         },
         AnimateVertices,
@@ -80,7 +84,7 @@ fn setup(
                 perspective: true,
                 depth_bias: -0.0002,
             })),
-            transform: Transform::from_xyz(-2.5, 0.0, 0.0).with_scale(vec3(5.0, 0.5, 0.5)),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0).with_scale(vec3(5.0, 0.5, 0.5)),
             ..Default::default()
         },
         AnimateVertices,
@@ -102,7 +106,7 @@ fn setup(
                 perspective: true,
                 depth_bias: -0.0002,
             })),
-            transform: Transform::from_xyz(-2.5, 0.0, 0.0).with_scale(vec3(5.0, 0.5, 0.5)),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0).with_scale(vec3(5.0, 0.5, 0.5)),
             ..Default::default()
         },
         AnimateVertices,
@@ -124,7 +128,7 @@ fn setup(
                 perspective: true,
                 depth_bias: -0.0002,
             })),
-            transform: Transform::from_xyz(-2.5, 0.0, -2.5).with_scale(vec3(5.0, 0.5, 0.5)),
+            transform: Transform::from_xyz(0.0, 0.0, -2.5).with_scale(vec3(5.0, 0.5, 0.5)),
             ..Default::default()
         },
         AnimateVertices,
