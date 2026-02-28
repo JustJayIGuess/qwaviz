@@ -35,6 +35,7 @@ pub struct InfiniteSquareWell {
 
 impl InfiniteSquareWell {
     /// Create an infinite square well
+    #[must_use]
     pub fn new(width: f32, mass: f32, hbar: f32, step_size: f32) -> InfiniteSquareWell {
         InfiniteSquareWell {
             width,
@@ -45,6 +46,7 @@ impl InfiniteSquareWell {
     }
 
     /// Return the `n`th eigenstate of the specified ISW
+    #[must_use]
     pub fn eigenstate(&self, n: usize) -> Ket1D {
         let width = self.width;
         let mass = self.mass;
@@ -62,6 +64,7 @@ impl InfiniteSquareWell {
     }
 
     /// Return a the state resulting from suddenly expanding an ISW from width `initial_width` to `final_width`
+    #[must_use]
     pub fn expansion_state(&self, initial_width: f32, n: usize) -> Ket1D {
         let mass = self.mass;
         let hbar = self.hbar;
@@ -78,6 +81,7 @@ impl InfiniteSquareWell {
     }
 
     /// Return a state which evolves from `initial_state(t=0)` according to the Schrodinger equation
+    #[must_use]
     pub fn evolution(&self, initial_state: &Ket1D, t0: f32, max_n: usize) -> Ket1D {
         let coef_eigenkets: Vec<(Complex32, Ket1D)> = (1..=max_n)
             .map(|i| {

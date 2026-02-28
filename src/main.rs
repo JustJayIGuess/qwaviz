@@ -1,11 +1,13 @@
 //! A test program decomposing a quantum state into an eigenbasis.
 #![deny(missing_docs)]
 
+use std::sync::Arc;
+
 use bevy::prelude::*;
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridPlugin, InfiniteGridSettings};
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use bevy_polyline::prelude::*;
-use num_complex::Complex32;
+use num_complex::ComplexFloat;
 
 use crate::{
     braket::{WFKet, Wavefunction},
@@ -31,9 +33,7 @@ fn main() {
         .add_systems(
             Update,
             (
-                animate_full_wavefunction,
-                animate_wavefunction_real,
-                animate_wavefunction_imag,
+                wf_animation_system,
                 rotator_system,
             ),
         )
@@ -49,7 +49,7 @@ fn setup(
 ) {
     let isw = InfiniteSquareWell::new(1.0, 1.0, 1.0, 1.0 / 1000.0);
     let ket_0 = isw.expansion_state(0.8, 1);
-    let ket_1 = isw.evolution(&ket_0, 0.0, 128);
+    let ket_1 = Arc::new(isw.evolution(&ket_0, 0.0, 128));
 
     commands.spawn((
         PolylineBundle {
@@ -70,7 +70,7 @@ fn setup(
             wf: ket_1.clone(),
             time_scale: 0.2,
         },
-        FullWavefunction,
+        WavefunctionType::Full,
     ));
 
     commands.spawn((
@@ -92,7 +92,7 @@ fn setup(
             wf: ket_1.clone(),
             time_scale: 0.2,
         },
-        WavefunctionReal,
+        WavefunctionType::Real,
     ));
 
     commands.spawn((
@@ -111,10 +111,34 @@ fn setup(
         },
         AnimateVertices,
         Wavefunction1D {
+            wf: ket_1.clone(),
+            time_scale: 0.2,
+        },
+        WavefunctionType::Imag,
+    ));
+
+
+
+    commands.spawn((
+        PolylineBundle {
+            polyline: PolylineHandle(polylines.add(Polyline {
+                ..Default::default()
+            })),
+            material: PolylineMaterialHandle(polyline_materials.add(PolylineMaterial {
+                width: 15.0,
+                color: bevy::color::palettes::css::WHITE.into(),
+                perspective: true,
+                depth_bias: -0.0002,
+            })),
+            transform: Transform::from_xyz(-2.5, 0.0, -2.5).with_scale(vec3(5.0, 0.5, 0.5)),
+            ..Default::default()
+        },
+        AnimateVertices,
+        Wavefunction1D {
             wf: ket_1,
             time_scale: 0.2,
         },
-        WavefunctionImag,
+        WavefunctionType::Density,
     ));
 
     commands.spawn(InfiniteGridBundle {
@@ -144,66 +168,45 @@ struct AnimateVertices;
 
 #[derive(Component)]
 struct Wavefunction1D {
-    wf: WFKet<WF1Space1Time>,
+    wf: Arc<WFKet<WF1Space1Time>>,
     time_scale: f32,
 }
 
 #[derive(Component)]
-struct FullWavefunction;
-
-#[derive(Component)]
-struct WavefunctionReal;
-
-#[derive(Component)]
-struct WavefunctionImag;
-
-fn animate_full_wavefunction(
-    t: Res<Time>,
-    mut polylines: ResMut<Assets<Polyline>>,
-    query: Query<(&PolylineHandle, &Wavefunction1D), With<FullWavefunction>>,
-) {
-    for (handle, Wavefunction1D { wf, time_scale }) in query.iter() {
-        polylines.get_mut(&handle.0).unwrap().vertices = wf
-            .subdomain
-            .iter()
-            .map(|x| (x, wf.f(x, time_scale * t.elapsed_secs())))
-            .map(|(x, Complex32 { re: real, im: imag })| vec3(x, real, imag))
-            .collect();
-    }
+enum WavefunctionType {
+    Full,
+    Real,
+    Imag,
+    Density,
 }
 
-fn animate_wavefunction_real(
-    t: Res<Time>,
+fn wf_animation_system(
+    time: Res<Time>,
     mut polylines: ResMut<Assets<Polyline>>,
-    query: Query<(&PolylineHandle, &Wavefunction1D), With<WavefunctionReal>>,
+    query: Query<(&PolylineHandle, &Wavefunction1D, &WavefunctionType)>,
 ) {
-    for (handle, Wavefunction1D { wf, time_scale }) in query.iter() {
+    for (handle, Wavefunction1D { wf, time_scale }, wf_type) in query.iter() {
         polylines.get_mut(&handle.0).unwrap().vertices = wf
             .subdomain
             .iter()
-            .map(|x| (x, wf.f(x, time_scale * t.elapsed_secs())))
-            .map(|(x, Complex32 { re: real, im: _ })| vec3(x, real, 0.0))
-            .collect();
-    }
-}
-
-fn animate_wavefunction_imag(
-    t: Res<Time>,
-    mut polylines: ResMut<Assets<Polyline>>,
-    query: Query<(&PolylineHandle, &Wavefunction1D), With<WavefunctionImag>>,
-) {
-    for (handle, Wavefunction1D { wf, time_scale }) in query.iter() {
-        polylines.get_mut(&handle.0).unwrap().vertices = wf
-            .subdomain
-            .iter()
-            .map(|x| (x, wf.f(x, time_scale * t.elapsed_secs())))
-            .map(|(x, Complex32 { re: _, im: imag })| vec3(x, 0.0, imag))
+            .map(|x| {
+                let t = time_scale * time.elapsed_secs();
+                match wf_type {
+                    WavefunctionType::Full => {
+                        let value = wf.f(x, t);
+                        vec3(x, value.re, value.im)
+                    },
+                    WavefunctionType::Real => vec3(x, wf.f(x, t).re, 0.0),
+                    WavefunctionType::Imag => vec3(x, 0.0, wf.f(x, t).im),
+                    WavefunctionType::Density => vec3(x, wf.p(x, t).abs(), 0.0),
+                }
+            })
             .collect();
     }
 }
 
 fn rotator_system(time: Res<Time>, mut query: Query<&mut Transform, With<Rotates>>) {
-    for mut transform in query.iter_mut() {
+    for mut transform in &mut query {
         *transform = Transform::from_rotation(Quat::from_rotation_y(
             (4.0 * std::f32::consts::PI / 20.0) * time.delta_secs(),
         )) * *transform;

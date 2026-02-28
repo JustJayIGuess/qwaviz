@@ -24,6 +24,8 @@ type WFFunc<S> = dyn Fn(<S as WFSignature>::Space, <S as WFSignature>::Time) -> 
 pub trait Wavefunction<S: WFSignature> {
     /// Evaluate the wavefunction at a point in space and time
     fn f(&self, x: S::Space, t: S::Time) -> S::Out;
+    /// Evaluate the probability density at a point in space and time
+    fn p(&self, x: S::Space, t: S::Time) -> S::Out;
 }
 
 /// A ket (vector) in a function vectorspace
@@ -75,16 +77,19 @@ impl<S: WFSignature> WFOperation<S> {
     }
 
     /// Sum n wavefunctions pointwise
+    #[must_use]
     pub fn sum(summands: Vec<Self>) -> Self {
         Self(WFOperationInner::Sum(Arc::new(summands)))
     }
 
     /// Sum n wavefunctions pointwise with weights
+    #[must_use]
     pub fn weighted_sum(summands: Vec<(S::Out, Self)>) -> Self {
         Self(WFOperationInner::WeightedSum(Arc::new(summands)))
     }
 
     /// Scale a wavefunction by a scalar
+    #[must_use]
     pub fn scale(s: S::Out, op: Self) -> Self {
         Self(WFOperationInner::Scale(s, Arc::new(op)))
     }
@@ -171,12 +176,30 @@ impl<S: WFSignature> Wavefunction<S> for WFKet<S> {
             S::Out::zero()
         }
     }
+    
+    fn p(&self, x: <S as WFSignature>::Space, t: <S as WFSignature>::Time) -> <S as WFSignature>::Out {
+        if self.subdomain.contains(x) {
+            let value = self.f(x, t);
+            value.conjugate() * value
+        } else {
+            S::Out::zero()
+        }
+    }
 }
 
 impl<S: WFSignature> Wavefunction<S> for WFBra<S> {
     fn f(&self, x: S::Space, t: S::Time) -> S::Out {
         if self.subdomain.contains(x) {
             self.wavefunction.eval(x, t)
+        } else {
+            S::Out::zero()
+        }
+    }
+    
+    fn p(&self, x: <S as WFSignature>::Space, t: <S as WFSignature>::Time) -> <S as WFSignature>::Out {
+        if self.subdomain.contains(x) {
+            let value = self.f(x, t);
+            value.conjugate() * value
         } else {
             S::Out::zero()
         }
