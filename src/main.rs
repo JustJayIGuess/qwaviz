@@ -13,6 +13,7 @@ use crate::{
     braket::{WFKet, Wavefunction},
     domains::SubDomain,
     infinite_square_well::InfiniteSquareWell,
+    potential::ConfinedPotential,
     signatures::WF1Space1Time,
 };
 
@@ -20,6 +21,7 @@ pub mod braket;
 pub mod domains;
 pub mod fields;
 pub mod infinite_square_well;
+pub mod potential;
 pub mod signatures;
 pub mod vectorspaces;
 
@@ -30,13 +32,7 @@ fn main() {
         .add_plugins(InfiniteGridPlugin)
         .add_plugins(PanOrbitCameraPlugin)
         .add_systems(Startup, setup)
-        .add_systems(
-            Update,
-            (
-                wf_animation_system,
-                rotator_system,
-            ),
-        )
+        .add_systems(Update, (wf_animation_system, rotator_system))
         .run();
 }
 
@@ -117,8 +113,6 @@ fn setup(
         WavefunctionType::Imag,
     ));
 
-
-
     commands.spawn((
         PolylineBundle {
             polyline: PolylineHandle(polylines.add(Polyline {
@@ -195,7 +189,7 @@ fn wf_animation_system(
                     WavefunctionType::Full => {
                         let value = wf.f(x, t);
                         vec3(x, value.re, value.im)
-                    },
+                    }
                     WavefunctionType::Real => vec3(x, wf.f(x, t).re, 0.0),
                     WavefunctionType::Imag => vec3(x, 0.0, wf.f(x, t).im),
                     WavefunctionType::Density => vec3(x, wf.p(x, t).abs(), 0.0),

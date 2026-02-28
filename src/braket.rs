@@ -176,8 +176,12 @@ impl<S: WFSignature> Wavefunction<S> for WFKet<S> {
             S::Out::zero()
         }
     }
-    
-    fn p(&self, x: <S as WFSignature>::Space, t: <S as WFSignature>::Time) -> <S as WFSignature>::Out {
+
+    fn p(
+        &self,
+        x: <S as WFSignature>::Space,
+        t: <S as WFSignature>::Time,
+    ) -> <S as WFSignature>::Out {
         if self.subdomain.contains(x) {
             let value = self.f(x, t);
             value.conjugate() * value
@@ -195,8 +199,12 @@ impl<S: WFSignature> Wavefunction<S> for WFBra<S> {
             S::Out::zero()
         }
     }
-    
-    fn p(&self, x: <S as WFSignature>::Space, t: <S as WFSignature>::Time) -> <S as WFSignature>::Out {
+
+    fn p(
+        &self,
+        x: <S as WFSignature>::Space,
+        t: <S as WFSignature>::Time,
+    ) -> <S as WFSignature>::Out {
         if self.subdomain.contains(x) {
             let value = self.f(x, t);
             value.conjugate() * value
