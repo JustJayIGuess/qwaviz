@@ -1,7 +1,13 @@
-use std::{ops::{Add, Neg, Sub}, sync::Arc};
+use std::{
+    ops::{Add, Neg, Sub},
+    sync::Arc,
+};
 
-use super::super::{wavefunction::{Wavefunction, signature::WFSignature}, core::{vectorspace::VectorSpace, field::Field, domain::{SubDomain}}};
-use super::{WFOperation, Ket, WFBra, Bra};
+use super::super::{
+    core::{domain::SubDomain, field::Field, vectorspace::VectorSpace},
+    wavefunction::{Wavefunction, signature::WFSignature},
+};
+use super::{Bra, Ket, WFBra, WFOperation};
 
 /// A ket (vector) holding a wavefunction
 #[derive(Clone)]
@@ -71,7 +77,6 @@ where
         }
     }
 }
-
 
 impl<S: WFSignature> Wavefunction<S> for WFKet<S> {
     fn f(&self, x: S::Space, t: S::Time) -> S::Out {

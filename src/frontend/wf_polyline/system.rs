@@ -4,7 +4,7 @@ use num_complex::ComplexFloat;
 
 use crate::framework::{core::domain::SubDomain, wavefunction::Wavefunction};
 
-use super::{WFType, WFComponent};
+use super::{WFComponent, WFType};
 
 pub fn wf_animation_system(
     time: Res<Time>,

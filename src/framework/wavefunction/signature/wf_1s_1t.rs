@@ -3,8 +3,6 @@ use num_complex::Complex32;
 use super::super::super::core::domain::DomainSection1D;
 use super::WFSignature;
 
-
-
 /// Standard wavefunction signature for 1 spatial dimension and 1 temporal dimension.
 #[derive(Clone)]
 pub struct WF1Space1Time;

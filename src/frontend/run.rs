@@ -1,10 +1,9 @@
-
-use bevy::prelude::*;
+use bevy::prelude::{App, DefaultPlugins, Startup, Update};
 use bevy_infinite_grid::InfiniteGridPlugin;
 use bevy_panorbit_camera::PanOrbitCameraPlugin;
 use bevy_polyline::PolylinePlugin;
 
-use super::{startup::setup, wf_polyline::wf_animation_system, rotator::rotator_system};
+use super::{rotator::rotator_system, startup::setup, wf_polyline::wf_animation_system};
 
 pub fn run() {
     App::new()

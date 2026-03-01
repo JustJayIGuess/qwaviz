@@ -1,12 +1,8 @@
 //! Functionality for representing abstract vector spaces
 
-use std::{
-    ops::{Add, Neg, Sub},
-};
+use std::ops::{Add, Neg, Sub};
 
-use super::{
-    field::Field,
-};
+use super::field::Field;
 
 /// Trait implementing properties of a vectorspace over a field
 pub trait VectorSpace<F: Field>:

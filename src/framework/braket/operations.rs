@@ -1,6 +1,9 @@
-use std::{ops::{Add, Neg, Sub}, sync::Arc};
+use std::{
+    ops::{Add, Neg, Sub},
+    sync::Arc,
+};
 
-use super::super::{wavefunction::signature::WFSignature, core::field::Field};
+use super::super::{core::field::Field, wavefunction::signature::WFSignature};
 
 type WFFunc<S> = dyn Fn(<S as WFSignature>::Space, <S as WFSignature>::Time) -> <S as WFSignature>::Out
     + Send

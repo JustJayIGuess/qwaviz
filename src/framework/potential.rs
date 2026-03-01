@@ -1,6 +1,16 @@
-//! Generic traits for solvable potentials
-//! 
-use super::super::{wavefunction::signature::WFSignature, braket::{Ket, WFKet, Bra}, core::vectorspace::VectorSpace};
+//! For representing solvable, confined time-independent potentials.
+
+mod harmonic_well;
+mod infinite_square_well;
+
+pub use harmonic_well::HarmonicWell;
+pub use infinite_square_well::InfiniteSquareWell;
+
+use super::{
+    braket::{Bra, Ket, WFKet},
+    core::vectorspace::VectorSpace,
+    wavefunction::signature::WFSignature,
+};
 
 /// A time-independent potential for which the Schroedinger equation can be solved.
 /// Note that the potential must be confining so that eigenstates are discrete.

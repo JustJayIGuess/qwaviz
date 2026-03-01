@@ -1,11 +1,20 @@
-use std::{ops::{Add, Mul, Neg, Sub}, sync::Arc};
+use std::{
+    ops::{Add, Mul, Neg, Sub},
+    sync::Arc,
+};
 
 #[cfg(feature = "par_braket")]
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
-use super::super::{wavefunction::{Wavefunction, signature::WFSignature}, core::{vectorspace::VectorSpace, domain::{Domain, SubDomain}, field::Field}};
-use super::{WFOperation, WFKet, Bra};
-
+use super::super::{
+    core::{
+        domain::{Domain, SubDomain},
+        field::Field,
+        vectorspace::VectorSpace,
+    },
+    wavefunction::{Wavefunction, signature::WFSignature},
+};
+use super::{Bra, WFKet, WFOperation};
 
 /// A bra (covector) holding a wavefunction
 #[derive(Clone)]

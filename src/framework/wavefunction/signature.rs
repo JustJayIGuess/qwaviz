@@ -1,6 +1,13 @@
-//! Signatures are used to specify typing and type interactions of function vector spaces
+//! Function signatures stores type and type-interaction information about functions.
 
-use super::super::super::{core::domain::{Domain, SubDomain}, core::field::Field};
+mod wf_1s_1t;
+
+pub use wf_1s_1t::WF1Space1Time;
+
+use super::super::{
+    core::domain::{Domain, SubDomain},
+    core::field::Field,
+};
 
 /// The type signature for a wavefunction.
 pub trait WFSignature: Clone {

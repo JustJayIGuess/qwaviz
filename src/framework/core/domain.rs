@@ -1,4 +1,9 @@
 //! Functionality for domains (input types to wavefunctions), and subdomains (subsets of domains where wavefunctions are defined)
+
+mod domain_sect_1d;
+
+pub use domain_sect_1d::{Domain1DIter, DomainSection1D};
+
 use std::ops::{Add, Mul, Sub};
 
 /// Trait describing properties of the domain of a wavefunction.
@@ -31,6 +36,7 @@ pub trait SubDomain<D: Domain>: Clone + Add<Output = Self> + Mul<Output = Self> 
     #[must_use]
     fn translate(self, offset: D) -> Self;
     /// Change step size.
+    #[must_use]
     fn with_step_size(self, step_size: D) -> Self;
 }
 

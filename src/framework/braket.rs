@@ -1,4 +1,15 @@
-use super::super::{wavefunction::signature::WFSignature, core::vectorspace::VectorSpace};
+//! Bra-ket notation, where bras are adjoints of kets and vice versa. Each form a vector space, with
+//! bras living in the dual space of kets. Applying a bra to a ket results in an inner product.
+
+mod operations;
+mod wf_bra;
+mod wf_ket;
+
+pub use operations::WFOperation;
+pub use wf_bra::WFBra;
+pub use wf_ket::WFKet;
+
+use super::{core::vectorspace::VectorSpace, wavefunction::signature::WFSignature};
 
 /// A ket (vector) in a function vectorspace
 pub trait Ket<S: WFSignature>: VectorSpace<S::Out> {
