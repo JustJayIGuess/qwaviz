@@ -1,6 +1,9 @@
 //! Harmonic well potential
 
-use std::{f32::consts::PI, sync::{Arc, LazyLock}};
+use std::{
+    f32::consts::PI,
+    sync::{Arc, LazyLock},
+};
 
 use num_complex::Complex32;
 

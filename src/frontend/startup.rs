@@ -2,10 +2,17 @@
 
 use std::sync::Arc;
 
-use bevy::{color::palettes, prelude::{Assets, Color, Commands, Mesh, PointLight, ResMut, StandardMaterial, Transform, Vec3}};
+use bevy::{
+    color::palettes,
+    prelude::{
+        Assets, Color, Commands, Mesh, PointLight, ResMut, StandardMaterial, Transform, Vec3,
+    },
+};
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridSettings};
 use bevy_panorbit_camera::PanOrbitCamera;
-use bevy_polyline::prelude::{Polyline, PolylineBundle, PolylineHandle, PolylineMaterial, PolylineMaterialHandle};
+use bevy_polyline::prelude::{
+    Polyline, PolylineBundle, PolylineHandle, PolylineMaterial, PolylineMaterialHandle,
+};
 use num_complex::Complex32;
 
 use super::wf_polyline::{WFComponent, WFPolylineBundle, WFType};
