@@ -17,9 +17,9 @@ use num_complex::Complex32;
 
 use super::wf_polyline::{WFComponent, WFPolylineBundle, WFType};
 use crate::framework::{
-    braket::{WFKet, WFOperation},
-    core::domain::DomainSection1D,
-    potential::{ConfinedPotential, HarmonicWell},
+    braket::WFKet,
+    core::domain::SubDomain1D,
+    discrete_system::{DiscreteSystem, HarmonicWell},
     wavefunction::Wavefunction,
 };
 
@@ -31,17 +31,16 @@ pub fn setup(
     mut polylines: ResMut<Assets<Polyline>>,
 ) {
     let hw = HarmonicWell::new(10.0, 1.0, 0.001, 1.0, 3.0);
-    let ket_0 = WFKet {
-        wavefunction: WFOperation::func(Arc::new(|_, _| Complex32::ONE)),
-        subdomain: DomainSection1D {
+    let ket_0 = WFKet::new(
+        Arc::new(|_, _| Complex32::ONE),
+        SubDomain1D {
             lower: -1.0,
             upper: 1.0,
             step_size: 0.001,
         },
-    }
+    )
     .translate_space(1.5);
-    let ket_1 = Arc::new(hw.evolution(&ket_0, 0.0, 30));
-    println!("Computation done. Domain: {:?}", ket_1.subdomain);
+    let ket_1 = Arc::new(hw.evolution(&ket_0, 0.0, 1, 30));
 
     let wf_component = WFComponent {
         wf: ket_1,

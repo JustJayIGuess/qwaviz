@@ -1,10 +1,12 @@
-//! For representing solvable, confined time-independent potentials.
+//! For representing solvable, confined time-independent potentials or other systems with discrete states.
 
 mod harmonic_well;
 mod infinite_square_well;
+mod two_state;
 
 pub use harmonic_well::HarmonicWell;
 pub use infinite_square_well::InfiniteSquareWell;
+pub use two_state::TwoState;
 
 use super::{
     braket::{Bra, Ket, WFKet},
@@ -14,15 +16,15 @@ use super::{
 
 /// A time-independent potential for which the Schroedinger equation can be solved.
 /// Note that the potential must be confining so that eigenstates are discrete.
-pub trait ConfinedPotential<S: WFSignature> {
-    /// Return the `n`th eigenstate of the specified ISW
-    fn eigenstate(&self, n: usize) -> WFKet<S>;
+pub trait DiscreteSystem<S: WFSignature> {
+    /// Return the `n`th energy eigenstate of the specified ISW, in the basis specified by `S::Space`
+    fn energy_eigenstate(&self, n: i32) -> WFKet<S>;
 
     /// Return a state which evolves from `initial_state(t=0)` according to the Schrodinger equation
-    fn evolution(&self, initial_state: &WFKet<S>, t0: S::Time, max_n: usize) -> WFKet<S> {
-        let coef_eigenkets: Vec<(S::Out, WFKet<S>)> = (1..=max_n)
+    fn evolution(&self, initial_state: &WFKet<S>, t0: S::Time, min_n: i32, max_n: i32) -> WFKet<S> {
+        let coef_eigenkets: Vec<(S::Out, WFKet<S>)> = (min_n..=max_n)
             .map(|i| {
-                let basis_state = self.eigenstate(i);
+                let basis_state = self.energy_eigenstate(i);
                 (
                     WFKet::<S>::adjoint(&basis_state).apply(initial_state, t0),
                     basis_state,

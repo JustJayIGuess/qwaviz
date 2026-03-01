@@ -1,8 +1,10 @@
 //! Function signatures stores type and type-interaction information about functions.
 
-mod wf_1s_1t;
+mod wf_1d;
+mod wf_finite;
 
-pub use wf_1s_1t::WF1Space1Time;
+pub use wf_1d::WF1D;
+pub use wf_finite::WFFinite;
 
 use super::super::{
     core::domain::{Domain, SubDomain},

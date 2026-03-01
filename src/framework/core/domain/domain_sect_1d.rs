@@ -4,7 +4,7 @@ use super::{Domain, SubDomain};
 
 #[derive(Clone, Debug)]
 /// A subdomain in one dimension for an arbitrary domain D
-pub struct DomainSection1D<D: Domain> {
+pub struct SubDomain1D<D: Domain> {
     /// The lower bound of the subdomain
     pub lower: D,
     /// The upper bound of the subdomain
@@ -14,15 +14,15 @@ pub struct DomainSection1D<D: Domain> {
 }
 
 /// An iterator over a 1D subdomain.
-pub struct Domain1DIter<D: Domain> {
-    upper: D,
-    step_size: D,
-    value: D,
+pub struct SubDomain1DIter<D: Domain> {
+    pub(super) upper: D,
+    pub(super) step_size: D,
+    pub(super) value: D,
 }
 
-impl<D: Domain> Domain1DIter<D> {
-    fn new(domain: &DomainSection1D<D>, step_size: D) -> Domain1DIter<D> {
-        Domain1DIter {
+impl<D: Domain> SubDomain1DIter<D> {
+    fn new(domain: &SubDomain1D<D>, step_size: D) -> SubDomain1DIter<D> {
+        SubDomain1DIter {
             upper: domain.upper,
             step_size,
             value: domain.lower,
@@ -30,11 +30,11 @@ impl<D: Domain> Domain1DIter<D> {
     }
 }
 
-impl<D: Domain> Iterator for Domain1DIter<D> {
+impl<D: Domain> Iterator for SubDomain1DIter<D> {
     type Item = D;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.value >= self.upper {
+        if self.value > self.upper {
             return None;
         }
 
@@ -44,7 +44,7 @@ impl<D: Domain> Iterator for Domain1DIter<D> {
     }
 }
 
-impl<D: Domain> SubDomain<D> for DomainSection1D<D> {
+impl<D: Domain> SubDomain<D> for SubDomain1D<D> {
     fn contains(&self, x: D) -> bool {
         self.lower <= x && x <= self.upper
     }
@@ -66,7 +66,7 @@ impl<D: Domain> SubDomain<D> for DomainSection1D<D> {
     }
 
     fn iter(&self) -> impl Iterator<Item = D> {
-        Domain1DIter::new(self, self.step_size)
+        SubDomain1DIter::new(self, self.step_size)
     }
 
     fn step_size(&self) -> D {
@@ -88,13 +88,18 @@ impl<D: Domain> SubDomain<D> for DomainSection1D<D> {
             step_size,
         }
     }
+
+    fn into_iter(self) -> impl Iterator<Item = D> + Sized + Send + Sync {
+        let step_size = self.step_size;
+        SubDomain1DIter::new(&self, step_size)
+    }
 }
 
-impl<D: Domain> Add for DomainSection1D<D> {
+impl<D: Domain> Add for SubDomain1D<D> {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        DomainSection1D {
+        SubDomain1D {
             lower: if self.lower < rhs.lower {
                 self.lower
             } else {
@@ -114,11 +119,11 @@ impl<D: Domain> Add for DomainSection1D<D> {
     }
 }
 
-impl<D: Domain> Mul for DomainSection1D<D> {
+impl<D: Domain> Mul for SubDomain1D<D> {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        DomainSection1D {
+        SubDomain1D {
             lower: if self.lower > rhs.lower {
                 self.lower
             } else {

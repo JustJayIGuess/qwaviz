@@ -5,7 +5,8 @@ use std::{
 
 use super::super::{core::field::Field, wavefunction::signature::WFSignature};
 
-type WFFunc<S> = dyn Fn(<S as WFSignature>::Space, <S as WFSignature>::Time) -> <S as WFSignature>::Out
+/// A valid wavefunction with signature `S`
+pub type WFFunc<S> = dyn Fn(<S as WFSignature>::Space, <S as WFSignature>::Time) -> <S as WFSignature>::Out
     + Send
     + Sync;
 

@@ -5,6 +5,7 @@ use bevy_polyline::PolylinePlugin;
 
 use super::{rotator::rotator_system, startup::setup, wf_polyline::wf_animation_system};
 
+/// Run the application.
 pub fn run() {
     App::new()
         .add_plugins(DefaultPlugins)

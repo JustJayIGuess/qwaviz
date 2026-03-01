@@ -3,14 +3,14 @@ use std::sync::Arc;
 use bevy::prelude::*;
 use bevy_polyline::prelude::PolylineBundle;
 
-use crate::framework::{braket::WFKet, wavefunction::signature::WF1Space1Time};
+use crate::framework::{braket::WFKet, wavefunction::signature::WF1D};
 
 #[derive(Component, Default)]
 pub(in crate::frontend) struct AnimateVertices;
 
 #[derive(Component, Default, Clone)]
 pub(in crate::frontend) struct WFComponent {
-    pub wf: Arc<WFKet<WF1Space1Time>>,
+    pub wf: Arc<WFKet<WF1D>>,
     pub time_scale: f32,
     pub render_step_size: f32,
 }

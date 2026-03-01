@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_polyline::prelude::{Polyline, PolylineHandle};
 use num_complex::ComplexFloat;
 
-use crate::framework::{core::domain::SubDomain, wavefunction::Wavefunction};
+use crate::framework::wavefunction::Wavefunction;
 
 use super::{WFComponent, WFType};
 
@@ -22,10 +22,7 @@ pub fn wf_animation_system(
     ) in query.iter()
     {
         polylines.get_mut(&handle.0).unwrap().vertices = wf
-            .subdomain
-            .clone()
-            .with_step_size(*render_step_size)
-            .iter()
+            .iter_with_step_size(*render_step_size)
             .map(|x| {
                 let t = time_scale * time.elapsed_secs();
                 match wf_type {

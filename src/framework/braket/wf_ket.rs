@@ -7,7 +7,7 @@ use super::super::{
     core::{domain::SubDomain, field::Field, vectorspace::VectorSpace},
     wavefunction::{Wavefunction, signature::WFSignature},
 };
-use super::{Bra, Ket, WFBra, WFOperation};
+use super::{Bra, Ket, WFBra, WFFunc, WFOperation};
 
 /// A ket (vector) holding a wavefunction
 #[derive(Clone)]
@@ -16,9 +16,27 @@ where
     S: WFSignature,
 {
     /// The wavefunction underlying this ket
-    pub wavefunction: WFOperation<S>,
+    pub(super) wavefunction: WFOperation<S>,
     /// The subset of the domain where this ket is defined.
-    pub subdomain: S::SubDom,
+    pub(super) subdomain: S::SubDom,
+}
+
+impl<S: WFSignature> WFKet<S> {
+    /// Return a new ket with the given wavefunction and subdomain
+    pub fn new(f: Arc<WFFunc<S>>, subdomain: S::SubDom) -> WFKet<S> {
+        WFKet {
+            wavefunction: WFOperation::func(f),
+            subdomain: subdomain,
+        }
+    }
+
+    /// Iterate over the domain of the ket with the given `step_size`
+    pub fn iter_with_step_size(
+        &self,
+        step_size: S::Space,
+    ) -> impl Iterator<Item = S::Space> + Sized + Send + Sync {
+        self.subdomain.clone().with_step_size(step_size).into_iter()
+    }
 }
 
 impl<S: WFSignature> Default for WFKet<S> {

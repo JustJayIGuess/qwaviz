@@ -1,8 +1,9 @@
 //! Functionality for domains (input types to wavefunctions), and subdomains (subsets of domains where wavefunctions are defined)
 
 mod domain_sect_1d;
+pub mod finite_domains;
 
-pub use domain_sect_1d::{Domain1DIter, DomainSection1D};
+pub use domain_sect_1d::{SubDomain1D, SubDomain1DIter};
 
 use std::ops::{Add, Mul, Sub};
 
@@ -10,7 +11,15 @@ use std::ops::{Add, Mul, Sub};
 /// Note that partial ordering and addition are needed to iterate over the domain;
 /// for finite domains, these can be defined by assigning an arbitrary ordering.
 pub trait Domain:
-    Sized + PartialOrd + Clone + Copy + Add<Output = Self> + Sub<Output = Self> + Send + Sync
+    Sized
+    + PartialOrd
+    + PartialEq
+    + Clone
+    + Copy
+    + Add<Output = Self>
+    + Sub<Output = Self>
+    + Send
+    + Sync
 {
     /// The lower bound of the domain
     fn first() -> Self;
@@ -30,6 +39,8 @@ pub trait SubDomain<D: Domain>: Clone + Add<Output = Self> + Mul<Output = Self> 
     fn none() -> Self;
     /// Return an iterator over this subdomain
     fn iter(&self) -> impl Iterator<Item = D> + Sized + Send + Sync;
+    /// Return an iterator over this subdomain and consume self
+    fn into_iter(self) -> impl Iterator<Item = D> + Sized + Send + Sync;
     /// The step size in this domain. Used as volume element in integration.
     fn step_size(&self) -> D;
     /// Translate this subdomain
@@ -51,5 +62,19 @@ impl Domain for f32 {
 
     fn zero() -> Self {
         0.0
+    }
+}
+
+impl Domain for i32 {
+    fn first() -> Self {
+        i32::MIN
+    }
+
+    fn last() -> Self {
+        i32::MAX
+    }
+
+    fn zero() -> Self {
+        0
     }
 }

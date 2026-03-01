@@ -5,6 +5,7 @@ mod operations;
 mod wf_bra;
 mod wf_ket;
 
+pub use operations::WFFunc;
 pub use operations::WFOperation;
 pub use wf_bra::WFBra;
 pub use wf_ket::WFKet;

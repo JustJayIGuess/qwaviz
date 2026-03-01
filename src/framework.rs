@@ -3,5 +3,5 @@
 
 pub mod braket;
 pub mod core;
-pub mod potential;
+pub mod discrete_system;
 pub mod wavefunction;

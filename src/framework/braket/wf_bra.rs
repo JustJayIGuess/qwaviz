@@ -14,7 +14,7 @@ use super::super::{
     },
     wavefunction::{Wavefunction, signature::WFSignature},
 };
-use super::{Bra, WFKet, WFOperation};
+use super::{Bra, WFFunc, WFKet, WFOperation};
 
 /// A bra (covector) holding a wavefunction
 #[derive(Clone)]
@@ -23,9 +23,19 @@ where
     S: WFSignature,
 {
     /// The wavefunction underlying this bra
-    pub wavefunction: WFOperation<S>,
+    pub(super) wavefunction: WFOperation<S>,
     /// The subset of the domain where this bra is defined
-    pub subdomain: S::SubDom,
+    pub(super) subdomain: S::SubDom,
+}
+
+impl<S: WFSignature> WFBra<S> {
+    /// Return a new ket with the given wavefunction and subdomain
+    pub fn new(f: Arc<WFFunc<S>>, subdomain: S::SubDom) -> WFBra<S> {
+        WFBra {
+            wavefunction: WFOperation::func(f),
+            subdomain: subdomain,
+        }
+    }
 }
 
 impl<S: WFSignature> Default for WFBra<S> {

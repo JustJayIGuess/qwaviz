@@ -9,12 +9,12 @@ use num_complex::Complex32;
 
 use super::super::{
     braket::{WFKet, WFOperation},
-    potential::ConfinedPotential,
-    wavefunction::signature::{WF1Space1Time, WFSignature},
+    discrete_system::DiscreteSystem,
+    wavefunction::signature::{WF1D, WFSignature},
 };
 
-type Ket1D = WFKet<WF1Space1Time>;
-type SubDom = <WF1Space1Time as WFSignature>::SubDom;
+type Ket1D = WFKet<WF1D>;
+type SubDom = <WF1D as WFSignature>::SubDom;
 
 /// A struct representing a harmonic well
 pub struct HarmonicWell {
@@ -31,7 +31,7 @@ static PI_SQRT: LazyLock<f32> = LazyLock::new(|| PI.sqrt());
 /// Courtesy of `ChatGPT`!
 /// Seriously, how is it so hard to find good implementations of
 /// normalised hermite polynomials?
-fn norm_hermite(n: usize, x: f32) -> f32 {
+fn norm_hermite(n: i32, x: f32) -> f32 {
     match n {
         0 => return *PI_FTH_RT, // 1 / π^(1/4)
         1 => return x * *PI_FTH_RT,
@@ -57,7 +57,7 @@ fn norm_hermite(n: usize, x: f32) -> f32 {
     h_n / norm_sq.sqrt()
 }
 
-fn eigenfunction(x: f32, t: f32, omega: f32, mass: f32, hbar: f32, n: usize) -> Complex32 {
+fn eigenfunction(x: f32, t: f32, omega: f32, mass: f32, hbar: f32, n: i32) -> Complex32 {
     let coef = (mass * omega / hbar).sqrt().sqrt();
     let herm = norm_hermite(n, (mass * omega / hbar).sqrt() * x);
     let energy = hbar * omega * (n as f32 + 0.5);
@@ -79,19 +79,17 @@ impl HarmonicWell {
     }
 }
 
-impl ConfinedPotential<WF1Space1Time> for HarmonicWell {
-    fn eigenstate(&self, n: usize) -> Ket1D {
+impl DiscreteSystem<WF1D> for HarmonicWell {
+    fn energy_eigenstate(&self, n: i32) -> Ket1D {
         let (omega, mass, hbar) = (self.omega, self.mass, self.hbar);
         // let width = (hbar / (mass * omega)).sqrt();
-        Ket1D {
-            wavefunction: WFOperation::func(Arc::new(move |x, t| {
-                eigenfunction(x, t, omega, mass, hbar, n - 1)
-            })),
-            subdomain: SubDom {
+        Ket1D::new(
+            Arc::new(move |x, t| eigenfunction(x, t, omega, mass, hbar, n - 1)),
+            SubDom {
                 lower: -self.half_width,
                 upper: self.half_width,
                 step_size: self.step_size,
             },
-        }
+        )
     }
 }
