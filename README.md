@@ -1,7 +1,8 @@
-https://github.com/user-attachments/assets/97b21362-93e0-42c4-97b6-51634ceed1f2
-
-
 # qwaviz
+
+https://github.com/user-attachments/assets/31ddb777-b140-494d-baa6-a2504ce32fa9
+
+
 > Quantum Wavefunction Visualiser
 
 For simulating and visualising solutions to the Schrodinger wave equation.
