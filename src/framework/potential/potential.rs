@@ -1,10 +1,6 @@
 //! Generic traits for solvable potentials
-
-use crate::{
-    braket::{Bra, Ket, WFKet},
-    signatures::WFSignature,
-    vectorspaces::VectorSpace,
-};
+//! 
+use super::super::{wavefunction::signature::WFSignature, braket::{Ket, WFKet, Bra}, core::vectorspace::VectorSpace};
 
 /// A time-independent potential for which the Schroedinger equation can be solved.
 /// Note that the potential must be confining so that eigenstates are discrete.

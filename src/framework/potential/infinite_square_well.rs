@@ -4,10 +4,10 @@ use std::{f32::consts::PI, sync::Arc};
 
 use num_complex::Complex32;
 
-use crate::{
+use super::super::{
     braket::{WFKet, WFOperation},
     potential::ConfinedPotential,
-    signatures::{WF1Space1Time, WFSignature},
+    wavefunction::signature::{WF1Space1Time, WFSignature},
 };
 
 type Ket1D = WFKet<WF1Space1Time>;
