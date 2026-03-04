@@ -3,7 +3,7 @@ use bevy_infinite_grid::InfiniteGridPlugin;
 use bevy_panorbit_camera::PanOrbitCameraPlugin;
 use bevy_polyline::PolylinePlugin;
 
-use super::{rotator::rotator_system, startup::setup, wf_polyline::wf_animation_system};
+use super::{startup::setup, wf_1d_vis::wf_animation_system};
 
 /// Run the application.
 pub fn run() {
@@ -13,6 +13,6 @@ pub fn run() {
         .add_plugins(InfiniteGridPlugin)
         .add_plugins(PanOrbitCameraPlugin)
         .add_systems(Startup, setup)
-        .add_systems(Update, (wf_animation_system, rotator_system))
+        .add_systems(Update, (wf_animation_system,))
         .run();
 }

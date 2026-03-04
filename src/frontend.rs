@@ -1,8 +1,9 @@
 //! Bevy ECS frontend for the app
 
-mod rotator;
 mod run;
 mod startup;
-mod wf_polyline;
+mod two_state;
+mod wf_1d_vis;
+mod wf_component;
 
 pub use run::run;
