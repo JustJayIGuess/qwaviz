@@ -39,24 +39,24 @@ pub fn setup(
     mut polyline_materials: ResMut<Assets<PolylineMaterial>>,
     mut polylines: ResMut<Assets<Polyline>>,
 ) {
-    // let hw = HarmonicWell::new(10.0, 1.0, 0.001, 1.0, 3.0);
-    // let ket_0 = WFKet::new(
-    //     Arc::new(|_, _| Complex32::ONE),
-    //     SubDomain1D {
-    //         lower: -1.0,
-    //         upper: 1.0,
-    //         step_size: 0.001,
-    //     },
-    // )
-    // .translate_space(1.5);
-    // let ket_1 = Arc::new(hw.evolution(&ket_0, 0.0, 1, 30));
+    let hw = HarmonicWell::new(10.0, 1.0, 0.001, 1.0, 3.0);
+    let ket_0 = WFKet::new(
+        Arc::new(|_, _| Complex32::ONE),
+        SubDomain1D {
+            lower: -1.0,
+            upper: 1.0,
+            step_size: 0.001,
+        },
+    )
+    .translate_space(1.5);
+    let ket_1 = Arc::new(hw.evolution(&ket_0, 0.0, 1, 30));
 
     // let isw = InfiniteSquareWell::new(2.0, 1.0, 2.0, 0.001);
     // let ket = Arc::new((isw.energy_eigenstate(1) + isw.energy_eigenstate(2)).scale(Complex32::new(1.0/2.0.sqrt(), 0.0)));
 
-    let isw = InfiniteSquareWell::new(2.0, 1.0, 2.0, 0.001);
-    let ket_0 = isw.expansion_state(1.0, 1);
-    let ket_1 = Arc::new(isw.evolution(&ket_0, 0.0, 1, 512));
+    // let isw = InfiniteSquareWell::new(2.0, 1.0, 2.0, 0.001);
+    // let ket_0 = isw.expansion_state(1.0, 1);
+    // let ket_1 = Arc::new(isw.evolution(&ket_0, 0.0, 1, 512));
 
     let wf_component = WFComponent {
         wf: ket_1,
