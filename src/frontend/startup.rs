@@ -44,7 +44,7 @@ pub fn setup(
         },
     )
     .translate_space(1.5);
-    let ket = hw.evolution(&ket_0, 0.0, 1, 256);
+    let ket = hw.evolution(&ket_0, 0.0, 1, 128);
 
     // let isw = InfiniteSquareWell::new(2.0, 1.0, 2.0, 0.001);
     // let ket = Arc::new((isw.energy_eigenstate(1) + isw.energy_eigenstate(2)).scale(Complex32::new(1.0/2.0.sqrt(), 0.0)));

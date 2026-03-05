@@ -72,19 +72,19 @@ impl WFType {
             WFType::Real => Ok(StandardMaterial {
                 base_color: Color::srgba(1.0, 0.2, 0.2, 0.7),
                 cull_mode: None,
-                alpha_mode: bevy::render::alpha::AlphaMode::Blend,
+                alpha_mode: bevy::render::alpha::AlphaMode::Add,
                 ..Default::default()
             }),
             WFType::Imag => Ok(StandardMaterial {
                 base_color: Color::srgba(0.3, 0.3, 1.0, 0.7),
                 cull_mode: None,
-                alpha_mode: bevy::render::alpha::AlphaMode::Blend,
+                alpha_mode: bevy::render::alpha::AlphaMode::Add,
                 ..Default::default()
             }),
             WFType::Density => Ok(StandardMaterial {
                 base_color: Color::srgba(1.0, 1.0, 1.0, 0.7),
                 cull_mode: None,
-                alpha_mode: bevy::render::alpha::AlphaMode::Blend,
+                alpha_mode: bevy::render::alpha::AlphaMode::Add,
                 ..Default::default()
             }),
         }
