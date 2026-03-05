@@ -34,13 +34,13 @@ pub fn setup(
     mut polylines: ResMut<Assets<Polyline>>,
 ) {
     // create wavefunction
-    let hw = HarmonicWell::new(10.0, 1.0, 0.0001, 1.0, 4.0);
+    let hw = HarmonicWell::new(10.0, 1.0, 0.001, 1.0, 4.0);
     let ket_0 = Ket::new(
         Arc::new(|_, _| Complex32::ONE),
         SubDomain1D {
             lower: -1.0,
             upper: 1.0,
-            step_size: 0.0001,
+            step_size: 0.001,
         },
     )
     .translate_space(1.5);
@@ -58,7 +58,7 @@ pub fn setup(
         wf_cache: Cache1D::from_ket(&ket, 0.02).unwrap(),
         wf: Arc::new(ket),
         time_scale: 0.1,
-        render_step_size: 0.02,
+        render_step_size: 0.01,
     };
 
     // wavefunction group
