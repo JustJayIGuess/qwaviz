@@ -13,7 +13,13 @@ pub(in crate::frontend) use cache_1d_system::update_cache_system;
 pub(in crate::frontend) use filled_wave::FilledWave;
 
 use bevy::{
-    asset::Assets, camera::visibility::Visibility, ecs::system::{Commands, ResMut}, math::Quat, mesh::{Mesh, Mesh3d}, pbr::StandardMaterial, transform::components::Transform
+    asset::Assets,
+    camera::visibility::Visibility,
+    ecs::system::{Commands, ResMut},
+    math::Quat,
+    mesh::{Mesh, Mesh3d},
+    pbr::StandardMaterial,
+    transform::components::Transform,
 };
 use bevy_polyline::prelude::{
     Polyline, PolylineBundle, PolylineHandle, PolylineMaterial, PolylineMaterialHandle,

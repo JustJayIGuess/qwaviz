@@ -13,101 +13,84 @@ use bevy::{
 use bevy_infinite_grid::{InfiniteGridBundle, InfiniteGridSettings};
 use bevy_panorbit_camera::PanOrbitCamera;
 use bevy_polyline::prelude::{Polyline, PolylineMaterial};
-use num_complex::Complex32;
 
 use super::wf_component::WFComponent;
 use crate::{
-    framework::{
-        braket::Ket,
-        core::domain::SubDomain1D,
-        discrete_system::{DiscreteSystem, HarmonicWell},
-        wavefunction::Wavefunction,
-    },
+    framework::{braket::Ket, wavefunction::signature::WF1D},
     frontend::wf_1d_vis::{Cache1D, spawn_wavefunction},
 };
 
-pub fn setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut standard_materials: ResMut<Assets<StandardMaterial>>,
-    mut polyline_materials: ResMut<Assets<PolylineMaterial>>,
-    mut polylines: ResMut<Assets<Polyline>>,
+pub fn get_setup(
+    ket: Ket<WF1D>,
+) -> impl FnMut(
+    Commands,
+    ResMut<Assets<Mesh>>,
+    ResMut<Assets<StandardMaterial>>,
+    ResMut<Assets<PolylineMaterial>>,
+    ResMut<Assets<Polyline>>,
 ) {
-    // create wavefunction
-    let hw = HarmonicWell::new(10.0, 1.0, 0.001, 1.0, 4.0);
-    let ket_0 = Ket::new(
-        Arc::new(|_, _| Complex32::ONE),
-        SubDomain1D {
-            lower: -1.0,
-            upper: 1.0,
-            step_size: 0.001,
-        },
-    )
-    .translate_space(1.5);
-    let ket = hw.evolution(&ket_0, 0.0, 1, 128);
+    let ket_arc = Arc::new(ket);
+    move |mut commands: Commands,
+          mut meshes: ResMut<Assets<Mesh>>,
+          mut standard_materials: ResMut<Assets<StandardMaterial>>,
+          mut polyline_materials: ResMut<Assets<PolylineMaterial>>,
+          mut polylines: ResMut<Assets<Polyline>>| {
+        // wavefunction visualiser spec
+        let wf_component = WFComponent {
+            wf_cache: Cache1D::from_ket(&ket_arc, 0.02).unwrap(),
+            wf: ket_arc.clone(),
+            time_scale: 0.1,
+            render_step_size: 0.01,
+        };
 
-    // let isw = InfiniteSquareWell::new(2.0, 1.0, 2.0, 0.001);
-    // let ket = Arc::new((isw.energy_eigenstate(1) + isw.energy_eigenstate(2)).scale(Complex32::new(1.0/2.0.sqrt(), 0.0)));
+        // wavefunction group
+        spawn_wavefunction(
+            wf_component,
+            Transform::IDENTITY,
+            &mut commands,
+            &mut meshes,
+            &mut standard_materials,
+            &mut polyline_materials,
+            &mut polylines,
+        );
 
-    // let isw = InfiniteSquareWell::new(2.0, 1.0, 2.0, 0.001);
-    // let ket_0 = isw.expansion_state(1.0, 1);
-    // let ket_1 = Arc::new(isw.evolution(&ket_0, 0.0, 1, 512));
-
-    // wavefunction visualiser spec
-    let wf_component = WFComponent {
-        wf_cache: Cache1D::from_ket(&ket, 0.02).unwrap(),
-        wf: Arc::new(ket),
-        time_scale: 0.1,
-        render_step_size: 0.01,
-    };
-
-    // wavefunction group
-    spawn_wavefunction(
-        wf_component,
-        Transform::IDENTITY,
-        &mut commands,
-        &mut meshes,
-        &mut standard_materials,
-        &mut polyline_materials,
-        &mut polylines,
-    );
-
-    // grid
-    commands.spawn(InfiniteGridBundle {
-        settings: InfiniteGridSettings {
-            x_axis_color: Color::WHITE,
+        // grid
+        commands.spawn(InfiniteGridBundle {
+            settings: InfiniteGridSettings {
+                x_axis_color: Color::WHITE,
+                ..Default::default()
+            },
             ..Default::default()
-        },
-        ..Default::default()
-    });
+        });
 
-    // light
-    commands.spawn((
-        DirectionalLight {
-            color: Color::WHITE,
-            illuminance: 1.0,
-            ..Default::default()
-        },
-        Transform::from_rotation(Quat::from_rotation_x(PI / 4.0)),
-    ));
+        // light
+        commands.spawn((
+            DirectionalLight {
+                color: Color::WHITE,
+                illuminance: 1.0,
+                ..Default::default()
+            },
+            Transform::from_rotation(Quat::from_rotation_x(PI / 4.0)),
+        ));
 
-    // camera
-    commands.spawn((
-        Camera3d::default(),
-        Camera {
-            clear_color: bevy::camera::ClearColorConfig::Custom(Color::srgb(0.05, 0.05, 0.05)),
-            ..Default::default()
-        },
-        Tonemapping::TonyMcMapface,
-        Bloom::NATURAL,
-        Transform::from_translation(Vec3::new(0.0, 1.5, 5.0)),
-        PanOrbitCamera {
-            orbit_smoothness: 0.08,
-            pan_smoothness: 0.1,
-            zoom_smoothness: 0.2,
-            ..Default::default()
-        },
-    ));
+        // camera
+        commands.spawn((
+            Camera3d::default(),
+            Camera {
+                clear_color: bevy::camera::ClearColorConfig::Custom(Color::srgb(0.05, 0.05, 0.05)),
+                ..Default::default()
+            },
+            Tonemapping::TonyMcMapface,
+            Bloom::NATURAL,
+            Transform::from_translation(Vec3::new(0.0, 1.5, 5.0)),
+            PanOrbitCamera {
+                orbit_smoothness: 0.08,
+                pan_smoothness: 0.1,
+                zoom_smoothness: 0.2,
+                ..Default::default()
+            },
+        ));
 
-    // action!
+        // action!
+    }
 }

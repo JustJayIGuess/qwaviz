@@ -9,12 +9,15 @@ use bevy_infinite_grid::InfiniteGridPlugin;
 use bevy_panorbit_camera::PanOrbitCameraPlugin;
 use bevy_polyline::PolylinePlugin;
 
-use crate::frontend::wf_1d_vis::update_cache_system;
+use crate::{
+    framework::{braket::Ket, wavefunction::signature::WF1D},
+    frontend::wf_1d_vis::update_cache_system,
+};
 
-use super::{startup::setup, wf_1d_vis::wf_animation_system};
+use super::{startup::get_setup, wf_1d_vis::wf_animation_system};
 
 /// Run the application.
-pub fn run() {
+pub fn run(ket: Ket<WF1D>) {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(PolylinePlugin)
@@ -35,7 +38,7 @@ pub fn run() {
                 ..Default::default()
             },
         })
-        .add_systems(Startup, (setup,))
+        .add_systems(Startup, get_setup(ket))
         .add_systems(PreUpdate, (update_cache_system,))
         .add_systems(Update, (wf_animation_system,))
         .run();

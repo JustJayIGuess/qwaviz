@@ -4,4 +4,5 @@
 pub mod braket;
 pub mod core;
 pub mod discrete_system;
+pub mod prelude;
 pub mod wavefunction;
