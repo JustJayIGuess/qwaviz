@@ -9,7 +9,7 @@ pub(crate) mod frontend;
 
 fn main() {
     let ket = square_in_harmonic_well();
-    frontend::run(ket);
+    frontend::run_viz_1d(ket);
 }
 
 /* -------------------------------------------------------------------------- */

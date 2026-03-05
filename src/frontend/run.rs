@@ -17,7 +17,7 @@ use crate::{
 use super::{startup::get_setup, wf_1d_vis::wf_animation_system};
 
 /// Run the application.
-pub fn run(ket: Ket<WF1D>) {
+pub fn run_viz_1d(ket: Ket<WF1D>) {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(PolylinePlugin)

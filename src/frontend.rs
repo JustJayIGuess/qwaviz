@@ -5,4 +5,4 @@ mod startup;
 mod wf_1d_vis;
 mod wf_component;
 
-pub use run::run;
+pub use run::run_viz_1d;
