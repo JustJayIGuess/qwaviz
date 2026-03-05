@@ -50,13 +50,10 @@ pub fn wf_animation_system(
     {
         let t = time_scale * time.elapsed_secs();
         if let Some(mesh) = meshes.get_mut(mesh_handle) {
-            let positions = match mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
-                Some(VertexAttributeValues::Float32x3(positions)) => positions,
-                _ => {
-                    panic!(
-                        "FilledWave Mesh Error: Unable to get mutable reference to mesh positions."
-                    )
-                }
+            let Some(VertexAttributeValues::Float32x3(positions)) =
+                mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION)
+            else {
+                panic!("FilledWave Mesh Error: Unable to get mutable reference to mesh positions.")
             };
             positions.chunks_mut(2).for_each(|chunk| {
                 match chunk {
@@ -76,42 +73,3 @@ pub fn wf_animation_system(
         }
     }
 }
-
-// pub fn update_mesh(mut meshes: ResMut<Assets<Mesh>>, mut query: Query<(&mut FilledWave, &WFComponent, &WFType)>) {
-//     if self.mesh.is_none() {
-//         self.mesh = Some(Mesh::new(
-//             PrimitiveTopology::TriangleStrip,
-//             Default::default(),
-//         ));
-//     }
-//     let mesh = self.mesh.as_mut().unwrap();
-//     let positions = match mesh.attribute_mut(Mesh::ATTRIBUTE_POSITION) {
-//         Some(VertexAttributeValues::Float32x3(positions)) => positions,
-//         _ => {
-//             panic!("FilledWave Mesh Error: Unable to get mutable reference to mesh positions.")
-//         }
-//     };
-
-//     if points.len() == positions.len() {
-//         for (p, chunk) in points.iter().zip(positions.chunks_mut(2)) {
-//             match chunk {
-//                 [domain, val] => {
-//                     domain[0] = p[0];
-//                     val[0] = p[0];
-//                     val[1] = p[1];
-//                 }
-//                 [_] => panic!("FilledWave Mesh Error: Odd Number of Vertices!"),
-//                 _ => unreachable!(),
-//             }
-//         }
-//     } else {
-//         let mut verts: Vec<[f32; 3]> = Vec::with_capacity(points.len() * 2);
-
-//         for [x, y] in points {
-//             verts.push([*x, 0.0, 0.0]);
-//             verts.push([*x, *y, 0.0]);
-//         }
-//         *positions = verts;
-//         mesh.compute_normals();
-//     }
-// }

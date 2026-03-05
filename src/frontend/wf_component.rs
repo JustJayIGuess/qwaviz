@@ -1,6 +1,11 @@
 use std::sync::Arc;
 
-use bevy::ecs::component::Component;
+use bevy::{
+    color::{Color, LinearRgba},
+    ecs::component::Component,
+    pbr::StandardMaterial,
+};
+use bevy_polyline::prelude::PolylineMaterial;
 
 use crate::framework::{braket::WFKet, wavefunction::signature::WF1D};
 
@@ -18,4 +23,59 @@ pub(in crate::frontend) enum WFType {
     Real,
     Imag,
     Density,
+}
+
+impl WFType {
+    pub fn polyline_mat(&self) -> PolylineMaterial {
+        match self {
+            WFType::Full => PolylineMaterial {
+                width: 50.0,
+                color: LinearRgba::rgb(1.0, 2.0, 1.0),
+                perspective: true,
+                ..Default::default()
+            },
+            WFType::Real => PolylineMaterial {
+                width: 15.0,
+                color: LinearRgba::rgb(15.0, 0.0, 0.0),
+                perspective: true,
+                ..Default::default()
+            },
+            WFType::Imag => PolylineMaterial {
+                width: 15.0,
+                color: LinearRgba::rgb(0.0, 0.0, 15.0),
+                perspective: true,
+                ..Default::default()
+            },
+            WFType::Density => PolylineMaterial {
+                width: 50.0,
+                color: LinearRgba::rgb(10.0, 10.0, 10.0),
+                perspective: true,
+                ..Default::default()
+            },
+        }
+    }
+
+    pub fn filled_mat(&self) -> StandardMaterial {
+        match self {
+            WFType::Full => panic!("Cannot make FilledWave for WFType::Full wavefunctions."),
+            WFType::Real => StandardMaterial {
+                base_color: Color::srgba(1.0, 0.2, 0.2, 0.7),
+                cull_mode: None,
+                alpha_mode: bevy::render::alpha::AlphaMode::Blend,
+                ..Default::default()
+            },
+            WFType::Imag => StandardMaterial {
+                base_color: Color::srgba(0.3, 0.3, 1.0, 0.7),
+                cull_mode: None,
+                alpha_mode: bevy::render::alpha::AlphaMode::Blend,
+                ..Default::default()
+            },
+            WFType::Density => StandardMaterial {
+                base_color: Color::srgba(1.0, 1.0, 1.0, 0.7),
+                cull_mode: None,
+                alpha_mode: bevy::render::alpha::AlphaMode::Blend,
+                ..Default::default()
+            },
+        }
+    }
 }

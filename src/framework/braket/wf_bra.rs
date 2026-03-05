@@ -33,7 +33,7 @@ impl<S: WFSignature> WFBra<S> {
     pub fn new(f: Arc<WFFunc<S>>, subdomain: S::SubDom) -> WFBra<S> {
         WFBra {
             wavefunction: WFOperation::func(f),
-            subdomain: subdomain,
+            subdomain,
         }
     }
 }

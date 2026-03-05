@@ -1,4 +1,8 @@
-use bevy::{asset::Handle, ecs::component::Component, mesh::Mesh};
+use bevy::{
+    asset::{Handle, RenderAssetUsages},
+    ecs::component::Component,
+    mesh::Mesh,
+};
 
 use crate::frontend::wf_component::WFComponent;
 
@@ -16,7 +20,7 @@ impl FilledWave {
             .collect();
         Mesh::new(
             bevy::mesh::PrimitiveTopology::TriangleStrip,
-            Default::default(),
+            RenderAssetUsages::default(),
         )
         .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, positions)
     }

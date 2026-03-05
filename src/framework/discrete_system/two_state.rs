@@ -18,7 +18,8 @@ pub struct TwoState {
 }
 
 impl TwoState {
-    /// Return a new TwoState system with given parameters.
+    /// Return a new `TwoState` system with given parameters.
+    #[must_use]
     pub fn new(level_1: f32, level_2: f32, coupling: Complex32, hbar: f32) -> Self {
         Self {
             level_1,
@@ -31,9 +32,11 @@ impl TwoState {
 
 impl DiscreteSystem<WFFinite> for TwoState {
     fn energy_eigenstate(&self, n: i32) -> WFKet<WFFinite> {
-        if n < 0 || n > 1 {
-            panic!("Index of TwoState eigenstate invalid. Only states 0,1 allowed.")
-        }
+        assert!(
+            (0..=1).contains(&n),
+            "Index of TwoState eigenstate invalid. Only states 0,1 allowed."
+        );
+
         let (level_1, level_2, coupling, hbar) =
             (self.level_1, self.level_2, self.coupling, self.hbar);
 

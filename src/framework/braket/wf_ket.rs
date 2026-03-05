@@ -26,7 +26,7 @@ impl<S: WFSignature> WFKet<S> {
     pub fn new(f: Arc<WFFunc<S>>, subdomain: S::SubDom) -> WFKet<S> {
         WFKet {
             wavefunction: WFOperation::func(f),
-            subdomain: subdomain,
+            subdomain,
         }
     }
 
