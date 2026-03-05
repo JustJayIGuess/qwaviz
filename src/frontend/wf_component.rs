@@ -6,6 +6,7 @@ use bevy::{
     pbr::StandardMaterial,
 };
 use bevy_polyline::prelude::PolylineMaterial;
+use thiserror::Error;
 
 use crate::framework::{braket::WFKet, wavefunction::signature::WF1D};
 
@@ -23,6 +24,12 @@ pub(in crate::frontend) enum WFType {
     Real,
     Imag,
     Density,
+}
+
+#[derive(Debug, Error)]
+pub enum FilledWaveMatError {
+    #[error("FilledWave cannot be applied to WFType::Full wavefunctions")]
+    AppliedToFullWF,
 }
 
 impl WFType {
@@ -55,27 +62,27 @@ impl WFType {
         }
     }
 
-    pub fn filled_mat(&self) -> StandardMaterial {
+    pub fn filled_mat(&self) -> Result<StandardMaterial, FilledWaveMatError> {
         match self {
-            WFType::Full => panic!("Cannot make FilledWave for WFType::Full wavefunctions."),
-            WFType::Real => StandardMaterial {
+            WFType::Full => Err(FilledWaveMatError::AppliedToFullWF),
+            WFType::Real => Ok(StandardMaterial {
                 base_color: Color::srgba(1.0, 0.2, 0.2, 0.7),
                 cull_mode: None,
                 alpha_mode: bevy::render::alpha::AlphaMode::Blend,
                 ..Default::default()
-            },
-            WFType::Imag => StandardMaterial {
+            }),
+            WFType::Imag => Ok(StandardMaterial {
                 base_color: Color::srgba(0.3, 0.3, 1.0, 0.7),
                 cull_mode: None,
                 alpha_mode: bevy::render::alpha::AlphaMode::Blend,
                 ..Default::default()
-            },
-            WFType::Density => StandardMaterial {
+            }),
+            WFType::Density => Ok(StandardMaterial {
                 base_color: Color::srgba(1.0, 1.0, 1.0, 0.7),
                 cull_mode: None,
                 alpha_mode: bevy::render::alpha::AlphaMode::Blend,
                 ..Default::default()
-            },
+            }),
         }
     }
 }

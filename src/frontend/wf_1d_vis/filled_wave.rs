@@ -8,7 +8,8 @@ use crate::frontend::wf_component::WFComponent;
 
 #[derive(Component, Default)]
 pub struct FilledWave {
-    pub mesh: Handle<Mesh>,
+    pub mesh_handle: Handle<Mesh>,
+    pub fill_intensity: f32,
 }
 
 impl FilledWave {
@@ -18,10 +19,12 @@ impl FilledWave {
             .iter_with_step_size(wf_component.render_step_size)
             .flat_map(|x| [[x, 0.0, 0.0], [x, 0.0, 0.0]])
             .collect();
+        let colors = vec![[1.0, 1.0, 1.0, 1.0]; positions.len()];
         Mesh::new(
             bevy::mesh::PrimitiveTopology::TriangleStrip,
             RenderAssetUsages::default(),
         )
         .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, positions)
+        .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, colors)
     }
 }

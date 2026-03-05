@@ -60,10 +60,13 @@ pub fn spawn_wavefunction(
         })
         .with_child(WFFilledWaveBundle {
             wave: FilledWave {
-                mesh: real_part_mesh.clone(),
+                mesh_handle: real_part_mesh.clone(),
+                fill_intensity: 4.0,
             },
             mesh: Mesh3d(real_part_mesh),
-            material: bevy::pbr::MeshMaterial3d(standard_materials.add(WFType::Real.filled_mat())),
+            material: bevy::pbr::MeshMaterial3d(
+                standard_materials.add(WFType::Real.filled_mat().unwrap()),
+            ),
             wf_component: wf_component.clone(),
             wf_type: WFType::Real,
             ..Default::default()
@@ -86,10 +89,13 @@ pub fn spawn_wavefunction(
         })
         .with_child(WFFilledWaveBundle {
             wave: FilledWave {
-                mesh: imag_part_mesh.clone(),
+                mesh_handle: imag_part_mesh.clone(),
+                fill_intensity: 4.0,
             },
             mesh: Mesh3d(imag_part_mesh),
-            material: bevy::pbr::MeshMaterial3d(standard_materials.add(WFType::Imag.filled_mat())),
+            material: bevy::pbr::MeshMaterial3d(
+                standard_materials.add(WFType::Imag.filled_mat().unwrap()),
+            ),
             wf_component: wf_component.clone(),
             wf_type: WFType::Imag,
             transform: Transform::from_rotation(Quat::from_rotation_x(PI / 2.0)),
@@ -113,11 +119,12 @@ pub fn spawn_wavefunction(
         })
         .with_child(WFFilledWaveBundle {
             wave: FilledWave {
-                mesh: density_part_mesh.clone(),
+                mesh_handle: density_part_mesh.clone(),
+                fill_intensity: 2.0,
             },
             mesh: Mesh3d(density_part_mesh),
             material: bevy::pbr::MeshMaterial3d(
-                standard_materials.add(WFType::Density.filled_mat()),
+                standard_materials.add(WFType::Density.filled_mat().unwrap()),
             ),
             wf_component,
             wf_type: WFType::Density,
