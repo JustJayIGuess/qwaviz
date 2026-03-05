@@ -8,13 +8,17 @@ use bevy::{
 use bevy_polyline::prelude::PolylineMaterial;
 use thiserror::Error;
 
-use crate::framework::{braket::WFKet, wavefunction::signature::WF1D};
+use crate::{
+    framework::{braket::Ket, wavefunction::signature::WF1D},
+    frontend::wf_1d_vis::Cache1D,
+};
 
 #[derive(Component, Default, Clone)]
 pub(in crate::frontend) struct WFComponent {
-    pub wf: Arc<WFKet<WF1D>>,
+    pub wf: Arc<Ket<WF1D>>,
     pub time_scale: f32,
     pub render_step_size: f32,
+    pub wf_cache: Cache1D,
 }
 
 #[derive(Component, Default)]

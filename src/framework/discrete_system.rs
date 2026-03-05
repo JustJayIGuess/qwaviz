@@ -9,7 +9,7 @@ pub use infinite_square_well::InfiniteSquareWell;
 pub use two_state::TwoState;
 
 use super::{
-    braket::{Bra, Ket, WFKet},
+    braket::{AbstractBra, AbstractKet, Ket},
     core::vectorspace::VectorSpace,
     wavefunction::signature::WFSignature,
 };
@@ -18,20 +18,20 @@ use super::{
 /// Note that the potential must be confining so that eigenstates are discrete.
 pub trait DiscreteSystem<S: WFSignature> {
     /// Return the `n`th energy eigenstate of the specified ISW, in the basis specified by `S::Space`
-    fn energy_eigenstate(&self, n: i32) -> WFKet<S>;
+    fn energy_eigenstate(&self, n: i32) -> Ket<S>;
 
     /// Return a state which evolves from `initial_state(t=0)` according to the Schrodinger equation
-    fn evolution(&self, initial_state: &WFKet<S>, t0: S::Time, min_n: i32, max_n: i32) -> WFKet<S> {
-        let coef_eigenkets: Vec<(S::Out, WFKet<S>)> = (min_n..=max_n)
+    fn evolution(&self, initial_state: &Ket<S>, t0: S::Time, min_n: i32, max_n: i32) -> Ket<S> {
+        let coef_eigenkets: Vec<(S::Out, Ket<S>)> = (min_n..=max_n)
             .map(|i| {
                 let basis_state = self.energy_eigenstate(i);
                 (
-                    WFKet::<S>::adjoint(&basis_state).apply(initial_state, t0),
+                    Ket::<S>::adjoint(&basis_state).apply(initial_state, t0),
                     basis_state,
                 )
             })
             .collect();
 
-        WFKet::<S>::weighted_sum(coef_eigenkets)
+        Ket::<S>::weighted_sum(coef_eigenkets)
     }
 }

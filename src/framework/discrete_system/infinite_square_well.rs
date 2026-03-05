@@ -5,12 +5,12 @@ use std::{f32::consts::PI, sync::Arc};
 use num_complex::Complex32;
 
 use super::super::{
-    braket::{WFKet, WFOperation},
+    braket::{Ket, WFOperation},
     discrete_system::DiscreteSystem,
     wavefunction::signature::{WF1D, WFSignature},
 };
 
-type Ket1D = WFKet<WF1D>;
+type Ket1D = Ket<WF1D>;
 type SubDom = <WF1D as WFSignature>::SubDom;
 
 #[derive(Clone)]

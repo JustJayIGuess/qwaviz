@@ -18,12 +18,12 @@ use num_complex::Complex32;
 use super::wf_component::WFComponent;
 use crate::{
     framework::{
-        braket::WFKet,
+        braket::Ket,
         core::domain::SubDomain1D,
         discrete_system::{DiscreteSystem, HarmonicWell},
         wavefunction::Wavefunction,
     },
-    frontend::wf_1d_vis::spawn_wavefunction,
+    frontend::wf_1d_vis::{Cache1D, spawn_wavefunction},
 };
 
 pub fn setup(
@@ -34,17 +34,17 @@ pub fn setup(
     mut polylines: ResMut<Assets<Polyline>>,
 ) {
     // create wavefunction
-    let hw = HarmonicWell::new(10.0, 1.0, 0.001, 1.0, 3.0);
-    let ket_0 = WFKet::new(
+    let hw = HarmonicWell::new(10.0, 1.0, 0.0001, 1.0, 4.0);
+    let ket_0 = Ket::new(
         Arc::new(|_, _| Complex32::ONE),
         SubDomain1D {
             lower: -1.0,
             upper: 1.0,
-            step_size: 0.001,
+            step_size: 0.0001,
         },
     )
     .translate_space(1.5);
-    let ket_1 = Arc::new(hw.evolution(&ket_0, 0.0, 1, 30));
+    let ket = hw.evolution(&ket_0, 0.0, 1, 256);
 
     // let isw = InfiniteSquareWell::new(2.0, 1.0, 2.0, 0.001);
     // let ket = Arc::new((isw.energy_eigenstate(1) + isw.energy_eigenstate(2)).scale(Complex32::new(1.0/2.0.sqrt(), 0.0)));
@@ -55,9 +55,10 @@ pub fn setup(
 
     // wavefunction visualiser spec
     let wf_component = WFComponent {
-        wf: ket_1,
+        wf_cache: Cache1D::from_ket(&ket, 0.02).unwrap(),
+        wf: Arc::new(ket),
         time_scale: 0.1,
-        render_step_size: 0.01,
+        render_step_size: 0.02,
     };
 
     // wavefunction group

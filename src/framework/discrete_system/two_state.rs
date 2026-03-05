@@ -3,7 +3,7 @@ use std::sync::Arc;
 use num_complex::Complex32;
 
 use crate::framework::{
-    braket::{WFKet, WFOperation},
+    braket::{Ket, WFOperation},
     core::{domain::finite_domains::FiniteSubDomain, field::Field},
     discrete_system::DiscreteSystem,
     wavefunction::signature::WFFinite,
@@ -31,7 +31,7 @@ impl TwoState {
 }
 
 impl DiscreteSystem<WFFinite> for TwoState {
-    fn energy_eigenstate(&self, n: i32) -> WFKet<WFFinite> {
+    fn energy_eigenstate(&self, n: i32) -> Ket<WFFinite> {
         assert!(
             (0..=1).contains(&n),
             "Index of TwoState eigenstate invalid. Only states 0,1 allowed."
@@ -59,7 +59,7 @@ impl DiscreteSystem<WFFinite> for TwoState {
             };
         let mean_level = 0.5 * (level_1 + level_2);
         let energy: f32 = mean_level + split;
-        WFKet::new(
+        Ket::new(
             Arc::new(move |x: i32, t: f32| {
                 Complex32::cis(-energy * t / hbar)
                     * match x {

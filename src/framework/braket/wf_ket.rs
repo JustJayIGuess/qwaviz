@@ -7,24 +7,24 @@ use super::super::{
     core::{domain::SubDomain, field::Field, vectorspace::VectorSpace},
     wavefunction::{Wavefunction, signature::WFSignature},
 };
-use super::{Bra, Ket, WFBra, WFFunc, WFOperation};
+use super::{AbstractBra, AbstractKet, Bra, WFFunc, WFOperation};
 
 /// A ket (vector) holding a wavefunction
 #[derive(Clone)]
-pub struct WFKet<S>
+pub struct Ket<S>
 where
     S: WFSignature,
 {
     /// The wavefunction underlying this ket
     pub(super) wavefunction: WFOperation<S>,
     /// The subset of the domain where this ket is defined.
-    pub(super) subdomain: S::SubDom,
+    pub subdomain: S::SubDom,
 }
 
-impl<S: WFSignature> WFKet<S> {
+impl<S: WFSignature> Ket<S> {
     /// Return a new ket with the given wavefunction and subdomain
-    pub fn new(f: Arc<WFFunc<S>>, subdomain: S::SubDom) -> WFKet<S> {
-        WFKet {
+    pub fn new(f: Arc<WFFunc<S>>, subdomain: S::SubDom) -> Ket<S> {
+        Ket {
             wavefunction: WFOperation::func(f),
             subdomain,
         }
@@ -39,7 +39,7 @@ impl<S: WFSignature> WFKet<S> {
     }
 }
 
-impl<S: WFSignature> Default for WFKet<S> {
+impl<S: WFSignature> Default for Ket<S> {
     fn default() -> Self {
         Self {
             wavefunction: WFOperation::func(Arc::new(|_, _| S::Out::zero())),
@@ -48,26 +48,26 @@ impl<S: WFSignature> Default for WFKet<S> {
     }
 }
 
-impl<S> VectorSpace<S::Out> for WFKet<S>
+impl<S> VectorSpace<S::Out> for Ket<S>
 where
     S: WFSignature,
 {
     fn zero() -> Self {
-        WFKet {
+        Ket {
             wavefunction: WFOperation::func(Arc::new(|_, _| S::Out::zero())),
             subdomain: S::SubDom::all(),
         }
     }
 
     fn scale(self, c: S::Out) -> Self {
-        WFKet {
+        Ket {
             wavefunction: WFOperation::scale(c, self.wavefunction),
             subdomain: self.subdomain,
         }
     }
 
     fn sum(vectors: Vec<Self>) -> Self {
-        WFKet {
+        Ket {
             wavefunction: WFOperation::sum(
                 vectors.iter().map(|v| v.wavefunction.clone()).collect(),
             ),
@@ -80,7 +80,7 @@ where
     }
 
     fn weighted_sum(summands: Vec<(S::Out, Self)>) -> Self {
-        WFKet {
+        Ket {
             wavefunction: WFOperation::weighted_sum(
                 summands
                     .iter()
@@ -96,7 +96,7 @@ where
     }
 }
 
-impl<S: WFSignature> Wavefunction<S> for WFKet<S> {
+impl<S: WFSignature> Wavefunction<S> for Ket<S> {
     fn f(&self, x: S::Space, t: S::Time) -> S::Out {
         if self.subdomain.contains(x) {
             self.wavefunction.eval(x, t)
@@ -133,28 +133,28 @@ impl<S: WFSignature> Wavefunction<S> for WFKet<S> {
     }
 }
 
-impl<S> Add for WFKet<S>
+impl<S> Add for Ket<S>
 where
     S: WFSignature,
 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        WFKet {
+        Ket {
             wavefunction: self.wavefunction + rhs.wavefunction,
             subdomain: self.subdomain + rhs.subdomain,
         }
     }
 }
 
-impl<S> Sub for WFKet<S>
+impl<S> Sub for Ket<S>
 where
     S: WFSignature,
 {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        WFKet {
+        Ket {
             wavefunction: self.wavefunction - rhs.wavefunction,
             #[allow(clippy::suspicious_arithmetic_impl)]
             subdomain: self.subdomain + rhs.subdomain,
@@ -162,25 +162,25 @@ where
     }
 }
 
-impl<S> Neg for WFKet<S>
+impl<S> Neg for Ket<S>
 where
     S: WFSignature,
 {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        WFKet {
+        Ket {
             wavefunction: -self.wavefunction,
             subdomain: self.subdomain,
         }
     }
 }
 
-impl<S> Ket<S> for WFKet<S>
+impl<S> AbstractKet<S> for Ket<S>
 where
     S: WFSignature,
 {
-    type Bra = WFBra<S>;
+    type Bra = Bra<S>;
 
     fn to_adjoint(self) -> Self::Bra {
         Self::Bra {

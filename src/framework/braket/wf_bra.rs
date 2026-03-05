@@ -14,11 +14,11 @@ use super::super::{
     },
     wavefunction::{Wavefunction, signature::WFSignature},
 };
-use super::{Bra, WFFunc, WFKet, WFOperation};
+use super::{AbstractBra, Ket, WFFunc, WFOperation};
 
 /// A bra (covector) holding a wavefunction
 #[derive(Clone)]
-pub struct WFBra<S>
+pub struct Bra<S>
 where
     S: WFSignature,
 {
@@ -28,17 +28,17 @@ where
     pub(super) subdomain: S::SubDom,
 }
 
-impl<S: WFSignature> WFBra<S> {
+impl<S: WFSignature> Bra<S> {
     /// Return a new ket with the given wavefunction and subdomain
-    pub fn new(f: Arc<WFFunc<S>>, subdomain: S::SubDom) -> WFBra<S> {
-        WFBra {
+    pub fn new(f: Arc<WFFunc<S>>, subdomain: S::SubDom) -> Bra<S> {
+        Bra {
             wavefunction: WFOperation::func(f),
             subdomain,
         }
     }
 }
 
-impl<S: WFSignature> Default for WFBra<S> {
+impl<S: WFSignature> Default for Bra<S> {
     fn default() -> Self {
         Self {
             wavefunction: WFOperation::func(Arc::new(|_, _| S::Out::zero())),
@@ -47,26 +47,26 @@ impl<S: WFSignature> Default for WFBra<S> {
     }
 }
 
-impl<S> VectorSpace<S::Out> for WFBra<S>
+impl<S> VectorSpace<S::Out> for Bra<S>
 where
     S: WFSignature,
 {
     fn zero() -> Self {
-        WFBra {
+        Bra {
             wavefunction: WFOperation::func(Arc::new(|_, _| S::Out::zero())),
             subdomain: S::SubDom::none(),
         }
     }
 
     fn scale(self, c: S::Out) -> Self {
-        WFBra {
+        Bra {
             wavefunction: WFOperation::scale(c, self.wavefunction),
             subdomain: self.subdomain,
         }
     }
 
     fn sum(vectors: Vec<Self>) -> Self {
-        WFBra {
+        Bra {
             wavefunction: WFOperation::sum(
                 vectors.iter().map(|v| v.wavefunction.clone()).collect(),
             ),
@@ -79,7 +79,7 @@ where
     }
 
     fn weighted_sum(summands: Vec<(S::Out, Self)>) -> Self {
-        WFBra {
+        Bra {
             wavefunction: WFOperation::weighted_sum(
                 summands
                     .iter()
@@ -95,7 +95,7 @@ where
     }
 }
 
-impl<S: WFSignature> Wavefunction<S> for WFBra<S> {
+impl<S: WFSignature> Wavefunction<S> for Bra<S> {
     fn f(&self, x: S::Space, t: S::Time) -> S::Out {
         if self.subdomain.contains(x) {
             self.wavefunction.eval(x, t)
@@ -132,28 +132,28 @@ impl<S: WFSignature> Wavefunction<S> for WFBra<S> {
     }
 }
 
-impl<S> Add for WFBra<S>
+impl<S> Add for Bra<S>
 where
     S: WFSignature,
 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
-        WFBra {
+        Bra {
             wavefunction: self.wavefunction + rhs.wavefunction,
             subdomain: self.subdomain + rhs.subdomain,
         }
     }
 }
 
-impl<S> Sub for WFBra<S>
+impl<S> Sub for Bra<S>
 where
     S: WFSignature,
 {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        WFBra {
+        Bra {
             wavefunction: self.wavefunction - rhs.wavefunction,
             #[allow(clippy::suspicious_arithmetic_impl)]
             subdomain: self.subdomain + rhs.subdomain,
@@ -161,33 +161,33 @@ where
     }
 }
 
-impl<S> Neg for WFBra<S>
+impl<S> Neg for Bra<S>
 where
     S: WFSignature,
 {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        WFBra {
+        Bra {
             wavefunction: -self.wavefunction,
             subdomain: self.subdomain,
         }
     }
 }
 
-impl<S: WFSignature> Mul<&WFKet<S>> for &WFBra<S> {
+impl<S: WFSignature> Mul<&Ket<S>> for &Bra<S> {
     type Output = S::Out;
 
-    fn mul(self, rhs: &WFKet<S>) -> Self::Output {
+    fn mul(self, rhs: &Ket<S>) -> Self::Output {
         self.apply(rhs, S::Time::zero())
     }
 }
 
-impl<S> Bra<S> for WFBra<S>
+impl<S> AbstractBra<S> for Bra<S>
 where
     S: WFSignature,
 {
-    type Ket = WFKet<S>;
+    type Ket = Ket<S>;
 
     #[cfg(not(feature = "par_braket"))]
     fn apply(&self, ket: &Self::Ket, t: S::Time) -> S::Out {

@@ -1,19 +1,19 @@
 //! Harmonic well potential
 
 use std::{
-    f32::consts::PI,
+    f32::consts::{PI, SQRT_2},
     sync::{Arc, LazyLock},
 };
 
 use num_complex::Complex32;
 
 use super::super::{
-    braket::{WFKet, WFOperation},
+    braket::{Ket, WFOperation},
     discrete_system::DiscreteSystem,
     wavefunction::signature::{WF1D, WFSignature},
 };
 
-type Ket1D = WFKet<WF1D>;
+type Ket1D = Ket<WF1D>;
 type SubDom = <WF1D as WFSignature>::SubDom;
 
 /// A struct representing a harmonic well
@@ -32,37 +32,38 @@ static PI_SQRT: LazyLock<f32> = LazyLock::new(|| PI.sqrt());
 /// Seriously, how is it so hard to find good implementations of
 /// normalised hermite polynomials?
 fn norm_hermite(n: i32, x: f32) -> f32 {
-    match n {
-        0 => return *PI_FTH_RT, // 1 / π^(1/4)
-        1 => return x * *PI_FTH_RT,
-        _ => {}
+    let psi0 = *PI_FTH_RT;
+    if n == 0 {
+        return psi0;
     }
 
-    // unnormalized recurrence
-    let mut h_nm1 = 1.0; // H_0
-    let mut h_n = 2.0 * x; // H_1
+    let psi1 = SQRT_2 * x * psi0;
+    if n == 1 {
+        return psi1;
+    }
+
+    let mut psi_nm1 = psi0;
+    let mut psi_n = psi1;
 
     for k in 1..n {
-        let h_np1 = 2.0 * x * h_n - 2.0 * (k as f32) * h_nm1;
-        h_nm1 = h_n;
-        h_n = h_np1;
+        let kf = k as f32;
+        let psi_np1 = (2.0 / (kf + 1.0)).sqrt() * x * psi_n - (kf / (kf + 1.0)).sqrt() * psi_nm1;
+
+        psi_nm1 = psi_n;
+        psi_n = psi_np1;
     }
 
-    // compute normalization incrementally: sqrt(2^n n! sqrt(pi))
-    let mut norm_sq = *PI_SQRT; // sqrt(pi)
-    for k in 0..n {
-        norm_sq *= 2.0 * (k as f32 + 1.0);
-    }
-
-    h_n / norm_sq.sqrt()
+    psi_n
 }
 
 fn eigenfunction(x: f32, t: f32, omega: f32, mass: f32, hbar: f32, n: i32) -> Complex32 {
-    let coef = (mass * omega / hbar).sqrt().sqrt();
-    let herm = norm_hermite(n, (mass * omega / hbar).sqrt() * x);
+    let scale = (mass * omega / hbar).sqrt();
+    let y = scale * x;
+    let psi = norm_hermite(n, y);
+    let prefactor = scale.sqrt();
+    let exp = (-0.5 * y * y).exp();
     let energy = hbar * omega * (n as f32 + 0.5);
-    let exp = (-mass * omega * x * x / (2.0 * hbar)).exp();
-    coef * exp * herm * Complex32::cis(-energy * t / hbar)
+    prefactor * exp * psi * Complex32::cis(-energy * t / hbar)
 }
 
 impl HarmonicWell {
