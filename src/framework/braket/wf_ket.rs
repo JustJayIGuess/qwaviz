@@ -35,7 +35,7 @@ impl<S: WFSignature> Ket<S> {
         &self,
         step_size: S::Space,
     ) -> impl Iterator<Item = S::Space> + Sized + Send + Sync {
-        self.subdomain.clone().with_step_size(step_size).into_iter()
+        self.subdomain.iter_with_step_size(step_size)
     }
 }
 
@@ -189,8 +189,8 @@ where
         }
     }
 
-    fn norm_sqr(&self, t: S::Time) -> S::Out {
-        Self::adjoint(self).apply(self, t)
+    fn norm_sqr(&self, t: S::Time, step_size: S::Space) -> S::Out {
+        Self::adjoint(self).apply(self, t, step_size)
     }
 
     fn adjoint(ket: &Self) -> Self::Bra {

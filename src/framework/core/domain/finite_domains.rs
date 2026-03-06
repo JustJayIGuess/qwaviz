@@ -5,11 +5,6 @@ use std::ops::{Add, Mul};
 
 use super::{Domain, SubDomain, SubDomain1DIter};
 
-// pub enum BinaryDomain {
-//     A,
-//     B
-// }
-
 /// A subdomain with finitely many coordinates
 #[derive(Clone)]
 pub struct FiniteSubDomain {
@@ -38,37 +33,18 @@ impl SubDomain<i32> for FiniteSubDomain {
         }
     }
 
-    fn iter(&self) -> impl Iterator<Item = i32> + Sized + Send + Sync {
+    fn iter_with_step_size(&self, _: i32) -> impl Iterator<Item = i32> + Sized + Send + Sync {
         SubDomain1DIter::<i32> {
             upper: self.max_idx,
             step_size: 1,
             value: self.min_idx,
         }
-    }
-
-    fn step_size(&self) -> i32 {
-        1
     }
 
     fn translate(self, offset: i32) -> Self {
         Self {
             min_idx: self.min_idx + offset,
             max_idx: self.max_idx + offset,
-        }
-    }
-
-    fn with_step_size(self, step_size: i32) -> Self {
-        Self {
-            min_idx: self.min_idx,
-            max_idx: self.max_idx,
-        }
-    }
-
-    fn into_iter(self) -> impl Iterator<Item = i32> + Sized + Send + Sync {
-        SubDomain1DIter::<i32> {
-            upper: self.max_idx,
-            step_size: 1,
-            value: self.min_idx,
         }
     }
 }

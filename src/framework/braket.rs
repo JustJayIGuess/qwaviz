@@ -21,7 +21,7 @@ pub trait AbstractKet<S: WFSignature>: VectorSpace<S::Out> {
     /// Create corresponding bra (covector) of a ket (vector)
     fn adjoint(ket: &Self) -> Self::Bra;
     /// Compute the squared norm using the standard inner product
-    fn norm_sqr(&self, t: S::Time) -> S::Out;
+    fn norm_sqr(&self, t: S::Time, step_size: S::Space) -> S::Out;
 }
 
 /// A bra (covector) in the dual of a function vectorspace
@@ -29,5 +29,5 @@ pub trait AbstractBra<S: WFSignature>: VectorSpace<S::Out> {
     /// The corresponding ket (vector) type
     type Ket: AbstractKet<S>;
     /// Apply this bra (covector) to a ket (vector) to produce an element of the field.
-    fn apply(&self, ket: &Self::Ket, t: S::Time) -> S::Out;
+    fn apply(&self, ket: &Self::Ket, t: S::Time, step_size: S::Space) -> S::Out;
 }

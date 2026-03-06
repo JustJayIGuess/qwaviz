@@ -9,8 +9,6 @@ pub struct SubDomain1D<D: Domain> {
     pub lower: D,
     /// The upper bound of the subdomain
     pub upper: D,
-    /// The step size in this subdomain
-    pub step_size: D,
 }
 
 /// An iterator over a 1D subdomain.
@@ -53,7 +51,6 @@ impl<D: Domain> SubDomain<D> for SubDomain1D<D> {
         Self {
             lower: D::first(),
             upper: D::last(),
-            step_size: D::last(),
         }
     }
 
@@ -61,37 +58,18 @@ impl<D: Domain> SubDomain<D> for SubDomain1D<D> {
         Self {
             lower: D::zero(),
             upper: D::zero(),
-            step_size: D::last(),
         }
     }
 
-    fn iter(&self) -> impl Iterator<Item = D> {
-        SubDomain1DIter::new(self, self.step_size)
-    }
-
-    fn step_size(&self) -> D {
-        self.step_size
+    fn iter_with_step_size(&self, step_size: D) -> impl Iterator<Item = D> {
+        SubDomain1DIter::new(self, step_size)
     }
 
     fn translate(self, offset: D) -> Self {
         Self {
             lower: self.lower + offset,
             upper: self.upper + offset,
-            step_size: self.step_size,
         }
-    }
-
-    fn with_step_size(self, step_size: D) -> Self {
-        Self {
-            lower: self.lower,
-            upper: self.upper,
-            step_size,
-        }
-    }
-
-    fn into_iter(self) -> impl Iterator<Item = D> + Sized + Send + Sync {
-        let step_size = self.step_size;
-        SubDomain1DIter::new(&self, step_size)
     }
 }
 
@@ -109,11 +87,6 @@ impl<D: Domain> Add for SubDomain1D<D> {
                 self.upper
             } else {
                 rhs.upper
-            },
-            step_size: if self.step_size < rhs.step_size {
-                self.step_size
-            } else {
-                rhs.step_size
             },
         }
     }
@@ -133,11 +106,6 @@ impl<D: Domain> Mul for SubDomain1D<D> {
                 self.upper
             } else {
                 rhs.upper
-            },
-            step_size: if self.step_size < rhs.step_size {
-                self.step_size
-            } else {
-                rhs.step_size
             },
         }
     }

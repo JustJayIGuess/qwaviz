@@ -21,12 +21,12 @@ pub trait DiscreteSystem<S: WFSignature> {
     fn energy_eigenstate(&self, n: i32) -> Ket<S>;
 
     /// Return a state which evolves from `initial_state(t=0)` according to the Schrodinger equation
-    fn evolution(&self, initial_state: &Ket<S>, t0: S::Time, min_n: i32, max_n: i32) -> Ket<S> {
+    fn evolution(&self, initial_state: &Ket<S>, t0: S::Time, step_size: S::Space, min_n: i32, max_n: i32) -> Ket<S> {
         let coef_eigenkets: Vec<(S::Out, Ket<S>)> = (min_n..=max_n)
             .map(|i| {
                 let basis_state = self.energy_eigenstate(i);
                 (
-                    Ket::<S>::adjoint(&basis_state).apply(initial_state, t0),
+                    Ket::<S>::adjoint(&basis_state).apply(initial_state, t0, step_size),
                     basis_state,
                 )
             })

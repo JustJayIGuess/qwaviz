@@ -37,18 +37,11 @@ pub trait SubDomain<D: Domain>: Clone + Add<Output = Self> + Mul<Output = Self> 
     fn all() -> Self;
     /// An empty subdomain
     fn none() -> Self;
-    /// Return an iterator over this subdomain
-    fn iter(&self) -> impl Iterator<Item = D> + Sized + Send + Sync;
-    /// Return an iterator over this subdomain and consume self
-    fn into_iter(self) -> impl Iterator<Item = D> + Sized + Send + Sync;
-    /// The step size in this domain. Used as volume element in integration.
-    fn step_size(&self) -> D;
+    /// Return an iterator over this subdomain with the given step size
+    fn iter_with_step_size(&self, step_size: D) -> impl Iterator<Item = D> + Sized + Send + Sync;
     /// Translate this subdomain
     #[must_use]
     fn translate(self, offset: D) -> Self;
-    /// Change step size.
-    #[must_use]
-    fn with_step_size(self, step_size: D) -> Self;
 }
 
 impl Domain for f32 {

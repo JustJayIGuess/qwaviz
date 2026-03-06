@@ -175,14 +175,6 @@ where
     }
 }
 
-impl<S: WFSignature> Mul<&Ket<S>> for &Bra<S> {
-    type Output = S::Out;
-
-    fn mul(self, rhs: &Ket<S>) -> Self::Output {
-        self.apply(rhs, S::Time::zero())
-    }
-}
-
 impl<S> AbstractBra<S> for Bra<S>
 where
     S: WFSignature,
@@ -190,22 +182,22 @@ where
     type Ket = Ket<S>;
 
     #[cfg(not(feature = "par_braket"))]
-    fn apply(&self, ket: &Self::Ket, t: S::Time) -> S::Out {
+    fn apply(&self, ket: &Self::Ket, t: S::Time, step_size: S::Space) -> S::Out {
         let domain = ket.subdomain.clone() * self.subdomain.clone();
         domain
-            .iter()
-            .map(|x| S::mul_to_codomain(domain.step_size(), self.f(x, t) * ket.f(x, t)))
+            .iter_with_step_size(step_size)
+            .map(|x| S::mul_to_codomain(step_size, self.f(x, t) * ket.f(x, t)))
             .reduce(|a, b| a + b)
             .unwrap_or_else(S::Out::zero)
     }
 
     #[cfg(feature = "par_braket")]
-    fn apply(&self, ket: &Self::Ket, t: S::Time) -> S::Out {
+    fn apply(&self, ket: &Self::Ket, t: S::Time, step_size: S::Space) -> S::Out {
         let domain = ket.subdomain.clone() * self.subdomain.clone();
         domain
-            .iter()
+            .iter_with_step_size(step_size)
             .par_bridge()
-            .map(|x| S::mul_to_codomain(domain.step_size(), self.f(x, t)) * ket.f(x, t))
+            .map(|x| S::mul_to_codomain(step_size, self.f(x, t)) * ket.f(x, t))
             .reduce(|| S::Out::zero(), |a, b| a + b)
     }
 }

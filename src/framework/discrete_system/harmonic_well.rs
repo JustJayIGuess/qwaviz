@@ -89,7 +89,6 @@ impl DiscreteSystem<WF1D> for HarmonicWell {
             SubDom {
                 lower: -self.half_width,
                 upper: self.half_width,
-                step_size: self.step_size,
             },
         )
     }

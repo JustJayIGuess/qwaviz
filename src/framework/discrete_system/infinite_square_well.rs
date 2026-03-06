@@ -43,7 +43,6 @@ impl DiscreteSystem<WF1D> for InfiniteSquareWell {
             SubDom {
                 lower: 0.0,
                 upper: width,
-                step_size: self.step_size,
             },
         )
     }
@@ -71,7 +70,6 @@ impl InfiniteSquareWell {
             SubDom {
                 lower: 0.0,
                 upper: initial_width,
-                step_size: self.step_size,
             },
         )
     }
