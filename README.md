@@ -2,11 +2,7 @@
 
 > Quantum Wavefunction Visualiser
 
-
-
-https://github.com/user-attachments/assets/ab718e76-79e5-4ccb-81ec-e2219aebe21d
-
-
+https://github.com/user-attachments/assets/58377dff-72de-4573-94b7-5ac0de9d60ea
 
 For simulating and visualising solutions to the Schrodinger wave equation.
 
