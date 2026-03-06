@@ -1,3 +1,5 @@
+//! Generalised functionality for wavefunction bras in Dirac's Bra-Ket formalism.
+
 use std::{
     ops::{Add, Mul, Neg, Sub},
     sync::Arc,

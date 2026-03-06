@@ -1,3 +1,5 @@
+//! Functionality for building and evaluating expression trees comprised of wavefunctions.
+
 use std::{
     ops::{Add, Neg, Sub},
     sync::Arc,
@@ -10,10 +12,11 @@ pub type WFFunc<S> = dyn Fn(<S as WFSignature>::Space, <S as WFSignature>::Time)
     + Send
     + Sync;
 
-/// Operations that can be done on the wavefunctions underlying bras (covectors) and kets (vectors)
+/// (Wrapper for) operations that can be done on the wavefunctions underlying bras (covectors) and kets (vectors)
 #[derive(Clone)]
 pub struct WFOperation<S: WFSignature>(WFOperationInner<S>);
 
+/// Operations that can be done on the wavefunctions underlying bras (covectors) and kets (vectors)
 #[derive(Clone)]
 enum WFOperationInner<S: WFSignature> {
     /// A constant in the function space (i.e., a function from (Space x Time) --> Out)
@@ -101,6 +104,7 @@ impl<S: WFSignature> Neg for WFOperation<S> {
 }
 
 impl<S: WFSignature> WFOperation<S> {
+    /// Evaluate a `WFOperation` expression tree
     pub(super) fn eval(&self, x: S::Space, t: S::Time) -> S::Out {
         match &self.0 {
             WFOperationInner::Function(f) => f(x, t),

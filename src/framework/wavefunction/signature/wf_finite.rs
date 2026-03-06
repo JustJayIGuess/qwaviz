@@ -1,3 +1,5 @@
+//! Implementation of wavefunction signature for finite domains.
+
 use num_complex::Complex32;
 
 use crate::framework::core::domain::finite_domains::FiniteSubDomain;
@@ -7,9 +9,9 @@ use super::WFSignature;
 
 /// Standard wavefunction signature for finite coordinates and 1 temporal dimension.
 #[derive(Clone)]
-pub struct WFFinite;
+pub struct SigFinite;
 
-impl WFSignature for WFFinite {
+impl WFSignature for SigFinite {
     type Space = i32;
     type Time = f32;
     type Out = Complex32;

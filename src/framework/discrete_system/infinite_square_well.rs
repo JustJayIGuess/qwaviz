@@ -4,14 +4,13 @@ use std::{f32::consts::PI, sync::Arc};
 
 use num_complex::Complex32;
 
+use crate::framework::prelude::SubDomain1D;
+
 use super::super::{
     braket::{Ket, WFOperation},
     discrete_system::DiscreteSystem,
-    wavefunction::signature::{WF1D, WFSignature},
+    wavefunction::signature::{Sign1D, WFSignature},
 };
-
-type Ket1D = Ket<WF1D>;
-type SubDom = <WF1D as WFSignature>::SubDom;
 
 #[derive(Clone)]
 /// A struct representing an infinite square well with a particle inside.
@@ -22,10 +21,9 @@ pub struct InfiniteSquareWell {
     mass: f32,
     /// The value of hbar to use
     hbar: f32,
-    /// The step size to use when doing calculations
-    step_size: f32,
 }
 
+/// Get the value of the `n`th energy eigenfunction at `x`, `t` with given parameters
 fn eigenfunction(x: f32, t: f32, width: f32, mass: f32, hbar: f32, n: i32) -> Complex32 {
     let energy = (n as f32 * PI * hbar / width).powi(2) / (2.0 * mass);
     let coef = (2.0 / width).sqrt();
@@ -33,14 +31,14 @@ fn eigenfunction(x: f32, t: f32, width: f32, mass: f32, hbar: f32, n: i32) -> Co
     coef * phase_x.sin() * Complex32::cis(-energy * t / hbar)
 }
 
-impl DiscreteSystem<WF1D> for InfiniteSquareWell {
-    fn energy_eigenstate(&self, n: i32) -> Ket1D {
+impl DiscreteSystem<Sign1D> for InfiniteSquareWell {
+    fn energy_eigenstate(&self, n: i32) -> Ket<Sign1D> {
         let width = self.width;
         let mass = self.mass;
         let hbar = self.hbar;
-        Ket1D::new(
+        Ket::<Sign1D>::new(
             Arc::new(move |x, t| eigenfunction(x, t, width, mass, hbar, n)),
-            SubDom {
+            SubDomain1D {
                 lower: 0.0,
                 upper: width,
             },
@@ -56,18 +54,17 @@ impl InfiniteSquareWell {
             width,
             mass,
             hbar,
-            step_size,
         }
     }
 
     /// Return a the state resulting from suddenly expanding an ISW from width `initial_width` to `final_width`
     #[must_use]
-    pub fn expansion_state(&self, initial_width: f32, n: i32) -> Ket1D {
+    pub fn expansion_state(&self, initial_width: f32, n: i32) -> Ket<Sign1D> {
         let mass = self.mass;
         let hbar = self.hbar;
-        Ket1D::new(
+        Ket::<Sign1D>::new(
             Arc::new(move |x, t| eigenfunction(x, t, initial_width, mass, hbar, n)),
-            SubDom {
+            SubDomain1D {
                 lower: 0.0,
                 upper: initial_width,
             },

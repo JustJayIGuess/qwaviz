@@ -1,3 +1,5 @@
+//! Frontend functionality for visualising 1D wavefunctions.
+
 mod animation_system;
 mod bundle;
 mod cache_1d;
@@ -27,6 +29,9 @@ use bevy_polyline::prelude::{
 
 use super::wf_component::{WFComponent, WFType};
 
+/// Spawn a 1D wavefunction visualiser.
+/// Spawns two polylines with fill for the real and imaginary parts, a polyline for the full wavefunction,
+/// and a polyline for the probability density.
 pub fn spawn_wavefunction(
     wf_component: WFComponent,
     transform: Transform,
@@ -36,9 +41,9 @@ pub fn spawn_wavefunction(
     polyline_materials: &mut ResMut<Assets<PolylineMaterial>>,
     polylines: &mut ResMut<Assets<Polyline>>,
 ) {
-    let real_part_mesh = meshes.add(FilledWave::mesh_from_wf_component(&wf_component));
-    let imag_part_mesh = meshes.add(FilledWave::mesh_from_wf_component(&wf_component));
-    let density_part_mesh = meshes.add(FilledWave::mesh_from_wf_component(&wf_component));
+    let fill_re = FilledWave::from_wf_component(&wf_component, 4.0, meshes);
+    let fill_im = FilledWave::from_wf_component(&wf_component, 4.0, meshes);
+    let fill_p = FilledWave::from_wf_component(&wf_component, 2.0, meshes);
     commands
         .spawn((wf_component, transform, Visibility::default()))
         .with_children(|parent| {
@@ -51,7 +56,6 @@ pub fn spawn_wavefunction(
                     ..Default::default()
                 },
                 wf_type: WFType::Full,
-                ..Default::default()
             });
 
             parent.spawn(WFPolylineBundle {
@@ -63,15 +67,10 @@ pub fn spawn_wavefunction(
                     ..Default::default()
                 },
                 wf_type: WFType::Real,
-                ..Default::default()
             });
-
             parent.spawn(WFFilledWaveBundle {
-                wave: FilledWave {
-                    mesh_handle: real_part_mesh.clone(),
-                    fill_intensity: 4.0,
-                },
-                mesh: Mesh3d(real_part_mesh),
+                mesh: Mesh3d(fill_re.mesh_handle().clone()),
+                wave: fill_re,
                 material: bevy::pbr::MeshMaterial3d(
                     standard_materials.add(WFType::Real.filled_mat().unwrap()),
                 ),
@@ -88,14 +87,10 @@ pub fn spawn_wavefunction(
                     ..Default::default()
                 },
                 wf_type: WFType::Imag,
-                ..Default::default()
             });
             parent.spawn(WFFilledWaveBundle {
-                wave: FilledWave {
-                    mesh_handle: imag_part_mesh.clone(),
-                    fill_intensity: 4.0,
-                },
-                mesh: Mesh3d(imag_part_mesh),
+                mesh: Mesh3d(fill_im.mesh_handle().clone()),
+                wave: fill_im,
                 material: bevy::pbr::MeshMaterial3d(
                     standard_materials.add(WFType::Imag.filled_mat().unwrap()),
                 ),
@@ -114,14 +109,10 @@ pub fn spawn_wavefunction(
                     ..Default::default()
                 },
                 wf_type: WFType::Density,
-                ..Default::default()
             });
             parent.spawn(WFFilledWaveBundle {
-                wave: FilledWave {
-                    mesh_handle: density_part_mesh.clone(),
-                    fill_intensity: 2.0,
-                },
-                mesh: Mesh3d(density_part_mesh),
+                mesh: Mesh3d(fill_p.mesh_handle().clone()),
+                wave: fill_p,
                 material: bevy::pbr::MeshMaterial3d(
                     standard_materials.add(WFType::Density.filled_mat().unwrap()),
                 ),

@@ -1,3 +1,5 @@
+//! Logic for updating 1D wavefunction cache.
+
 use bevy::{
     ecs::system::{Query, Res},
     input::{ButtonInput, keyboard::KeyCode},
@@ -6,6 +8,8 @@ use bevy::{
 
 use crate::frontend::wf_component::WFComponent;
 
+/// Update the caches of wavefunctions currently being visualised.
+/// This is done to prevent repeat calculations for entities sharing the same wavefunction.
 pub fn update_cache_system(
     time: Res<Time>,
     mut query: Query<&mut WFComponent>,

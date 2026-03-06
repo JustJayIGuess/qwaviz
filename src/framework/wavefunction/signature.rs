@@ -3,8 +3,8 @@
 mod wf_1d;
 mod wf_finite;
 
-pub use wf_1d::WF1D;
-pub use wf_finite::WFFinite;
+pub use wf_1d::Sign1D;
+pub use wf_finite::SigFinite;
 
 use super::super::{
     core::domain::{Domain, SubDomain},

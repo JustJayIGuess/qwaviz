@@ -1,4 +1,4 @@
-//! Harmonic well potential
+//! 1D Harmonic well potential
 
 use std::{
     f32::consts::{PI, SQRT_2},
@@ -7,25 +7,29 @@ use std::{
 
 use num_complex::Complex32;
 
+use crate::framework::prelude::SubDomain1D;
+
 use super::super::{
     braket::{Ket, WFOperation},
     discrete_system::DiscreteSystem,
-    wavefunction::signature::{WF1D, WFSignature},
+    wavefunction::signature::{Sign1D, WFSignature},
 };
 
-type Ket1D = Ket<WF1D>;
-type SubDom = <WF1D as WFSignature>::SubDom;
-
-/// A struct representing a harmonic well
+/// A struct representing a harmonic well potential
 pub struct HarmonicWell {
+    /// The standard `omega` value of the harmonic well potential
     omega: f32,
+    /// The mass of the particle
     mass: f32,
-    step_size: f32,
+    /// The value to use for the reduced planck's constant
     hbar: f32,
+    /// The half-width of the well, beyond which the wavefunction will be set to zero.
     half_width: f32,
 }
 
+/// Inverse fourth root of pi
 static PI_FTH_RT: LazyLock<f32> = LazyLock::new(|| 1.0 / PI.sqrt().sqrt());
+/// Square root of pi
 static PI_SQRT: LazyLock<f32> = LazyLock::new(|| PI.sqrt());
 
 /// Courtesy of `ChatGPT`!
@@ -56,6 +60,7 @@ fn norm_hermite(n: i32, x: f32) -> f32 {
     psi_n
 }
 
+/// Get the value of the `n`th energy eigenfunction at `x`, `t` with given parameters
 fn eigenfunction(x: f32, t: f32, omega: f32, mass: f32, hbar: f32, n: i32) -> Complex32 {
     let scale = (mass * omega / hbar).sqrt();
     let y = scale * x;
@@ -73,20 +78,18 @@ impl HarmonicWell {
         HarmonicWell {
             omega,
             mass,
-            step_size,
             hbar,
             half_width,
         }
     }
 }
 
-impl DiscreteSystem<WF1D> for HarmonicWell {
-    fn energy_eigenstate(&self, n: i32) -> Ket1D {
+impl DiscreteSystem<Sign1D> for HarmonicWell {
+    fn energy_eigenstate(&self, n: i32) -> Ket<Sign1D> {
         let (omega, mass, hbar) = (self.omega, self.mass, self.hbar);
-        // let width = (hbar / (mass * omega)).sqrt();
-        Ket1D::new(
+        Ket::<Sign1D>::new(
             Arc::new(move |x, t| eigenfunction(x, t, omega, mass, hbar, n - 1)),
-            SubDom {
+            SubDomain1D {
                 lower: -self.half_width,
                 upper: self.half_width,
             },

@@ -1,3 +1,5 @@
+//! `SubDomain` impl's for 1D domain use-cases.
+
 use std::ops::{Add, Mul};
 
 use super::{Domain, SubDomain};
@@ -13,12 +15,16 @@ pub struct SubDomain1D<D: Domain> {
 
 /// An iterator over a 1D subdomain.
 pub struct SubDomain1DIter<D: Domain> {
+    /// The upper bound of the iterator
     pub(super) upper: D,
+    /// The step size to use when iterating
     pub(super) step_size: D,
+    /// The current value of the iterator
     pub(super) value: D,
 }
 
 impl<D: Domain> SubDomain1DIter<D> {
+    /// Create a new 1D domain iterator
     fn new(domain: &SubDomain1D<D>, step_size: D) -> SubDomain1DIter<D> {
         SubDomain1DIter {
             upper: domain.upper,

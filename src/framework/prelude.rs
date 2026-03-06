@@ -6,7 +6,7 @@ pub use super::{
     discrete_system::{DiscreteSystem, HarmonicWell, InfiniteSquareWell, TwoState},
     wavefunction::{
         Wavefunction,
-        signature::{WF1D, WFFinite},
+        signature::{Sign1D, SigFinite},
     },
 };
 pub use num_complex::Complex32;

@@ -1,3 +1,5 @@
+//! Functionality for simulating two-state quantum systems.
+
 use std::sync::Arc;
 
 use num_complex::Complex32;
@@ -6,14 +8,19 @@ use crate::framework::{
     braket::{Ket, WFOperation},
     core::{domain::finite_domains::FiniteSubDomain, field::Field},
     discrete_system::DiscreteSystem,
-    wavefunction::signature::WFFinite,
+    wavefunction::signature::SigFinite,
 };
 
 /// A two-state quantum system
 pub struct TwoState {
+    /// The first bare energy level (as if there were no other level)
     level_1: f32,
+    /// The second bare energy level (as if there were no other level)
     level_2: f32,
+    /// The coupling value between the energy levels. These are the off-diagonal
+    /// terms of the Hamiltonian matrix.
     coupling: Complex32,
+    /// The value of hbar to use.
     hbar: f32,
 }
 
@@ -30,8 +37,8 @@ impl TwoState {
     }
 }
 
-impl DiscreteSystem<WFFinite> for TwoState {
-    fn energy_eigenstate(&self, n: i32) -> Ket<WFFinite> {
+impl DiscreteSystem<SigFinite> for TwoState {
+    fn energy_eigenstate(&self, n: i32) -> Ket<SigFinite> {
         assert!(
             (0..=1).contains(&n),
             "Index of TwoState eigenstate invalid. Only states 0,1 allowed."

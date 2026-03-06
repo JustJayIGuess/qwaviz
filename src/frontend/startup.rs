@@ -16,12 +16,14 @@ use bevy_polyline::prelude::{Polyline, PolylineMaterial};
 
 use super::wf_component::WFComponent;
 use crate::{
-    framework::{braket::Ket, wavefunction::signature::WF1D},
+    framework::{braket::Ket, wavefunction::signature::Sign1D},
     frontend::wf_1d_vis::{Cache1D, spawn_wavefunction},
 };
 
+/// Get a bevy startup system that visualises the given ket.
+#[allow(clippy::type_complexity)]
 pub fn get_setup(
-    ket: Ket<WF1D>,
+    ket: Ket<Sign1D>,
 ) -> impl FnMut(
     Commands,
     ResMut<Assets<Mesh>>,

@@ -1,3 +1,5 @@
+//! Animation logic for wavefunction polylines and fill meshes.
+
 use bevy::{mesh::VertexAttributeValues, prelude::*};
 use bevy_polyline::prelude::{Polyline, PolylineHandle};
 use thiserror::Error;
@@ -7,6 +9,7 @@ use crate::frontend::wf_1d_vis::filled_wave::FilledWave;
 use super::super::wf_component::{WFComponent, WFType};
 
 #[derive(Debug, Error)]
+#[allow(clippy::missing_docs_in_private_items)]
 pub enum FilledWaveMeshError {
     #[error("Unable to get mutable reference to vertex positions")]
     VertexPositions,
@@ -21,11 +24,13 @@ pub enum FilledWaveMeshError {
 }
 
 #[derive(Error, Debug)]
+#[allow(clippy::missing_docs_in_private_items)]
 pub enum WFPolylineError {
     #[error("Unable to find polyline using given handle.")]
     MissingPolyline,
 }
 
+/// Animate 1D wavefunction polylines and fill
 pub fn wf_animation_system(
     mut meshes: ResMut<Assets<Mesh>>,
     mut polylines: ResMut<Assets<Polyline>>,
@@ -50,28 +55,26 @@ pub fn wf_animation_system(
                     .ok_or(WFPolylineError::MissingPolyline)?;
                 polyline.vertices = wf
                     .iter_with_step_size(*render_step_size)
-                    .map(|x| match wf_type {
-                        WFType::Full => {
-                            let value = wf_cache.get_value(x);
-                            vec3(x, value.re, value.im)
-                        }
-                        WFType::Real => vec3(x, wf_cache.get_value(x).re, 0.0),
-                        WFType::Imag => vec3(x, 0.0, wf_cache.get_value(x).im),
-                        WFType::Density => vec3(x, wf_cache.get_density(x), 0.0),
-                    })
+                    .map(|x| {
+                        let value = wf_cache.at(x);
+                        match wf_type {
+                            WFType::Full => {
+                                vec3(x, value.re, value.im)
+                            }
+                            WFType::Real => vec3(x, value.re, 0.0),
+                            WFType::Imag => vec3(x, 0.0, value.im),
+                            WFType::Density => vec3(x, value.norm_sqr().abs(), 0.0),
+                        }})
                     .collect();
             }
 
             if let Ok((
-                FilledWave {
-                    mesh_handle,
-                    fill_intensity,
-                },
+                fill,
                 wf_type,
             )) = filled_query.get(*child)
             {
                 let mesh = meshes
-                    .get_mut(mesh_handle)
+                    .get_mut(fill.mesh_handle())
                     .ok_or(FilledWaveMeshError::NoMesh)?;
 
                 let mut positions_opt: Option<&mut Vec<[f32; 3]>> = None;
@@ -98,13 +101,13 @@ pub fn wf_animation_system(
                                 WFType::Full => {
                                     return Err(FilledWaveMeshError::AppliedToFullWF.into());
                                 }
-                                WFType::Real => wf_cache.get_value(x).re,
-                                WFType::Imag => wf_cache.get_value(x).im,
-                                WFType::Density => wf_cache.get_density(x),
+                                WFType::Real => wf_cache.at(x).re,
+                                WFType::Imag => wf_cache.at(x).im,
+                                WFType::Density => wf_cache.at(x).norm_sqr().abs(),
                             };
                             val_p[1] = y;
-                            *domain_c = [y * fill_intensity; 4];
-                            *val_c = [y * fill_intensity; 4];
+                            *domain_c = [y * fill.intensity(); 4];
+                            *val_c = [y * fill.intensity(); 4];
                         }
                         _ => return Err(FilledWaveMeshError::InvalidVertices.into()),
                     }

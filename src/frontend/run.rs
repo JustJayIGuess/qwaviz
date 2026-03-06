@@ -1,3 +1,5 @@
+//! Functionality to start the frontend by running an bevy app.
+
 use bevy::{
     app::PreUpdate,
     color::Color,
@@ -10,14 +12,14 @@ use bevy_panorbit_camera::PanOrbitCameraPlugin;
 use bevy_polyline::PolylinePlugin;
 
 use crate::{
-    framework::{braket::Ket, wavefunction::signature::WF1D},
+    framework::{braket::Ket, wavefunction::signature::Sign1D},
     frontend::wf_1d_vis::update_cache_system,
 };
 
 use super::{startup::get_setup, wf_1d_vis::wf_animation_system};
 
-/// Run the application.
-pub fn run_viz_1d(ket: Ket<WF1D>) {
+/// Run the application and visualise a single 1D wavefunction.
+pub fn run_viz_1d(ket: Ket<Sign1D>) {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(PolylinePlugin)
