@@ -2,6 +2,8 @@
 name = "qwaviz"
 version = "0.1.0"
 edition = "2024"
+description = "An educational package for rendering different types of quantum wavefunctions."
+repository = "https://github.com/JustJayIGuess/qwaviz/"
 
 [dependencies]
 bevy = { version = "0.17.0", features = ["bevy_scene", "bevy_gltf", "bevy_dev_tools"] }

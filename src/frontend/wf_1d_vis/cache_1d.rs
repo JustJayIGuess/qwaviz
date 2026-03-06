@@ -41,7 +41,7 @@ pub enum Cache1DError {
 }
 
 impl Cache1D {
-    /// Create a new cache ranging from min to max with the given step_size
+    /// Create a new cache ranging from min to max with the given `step_size`
     /// for sampling values.
     pub fn new(min: f32, max: f32, step_size: f32) -> Result<Cache1D, Cache1DError> {
         if min > max {

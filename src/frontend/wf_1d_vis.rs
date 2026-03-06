@@ -116,7 +116,6 @@ pub fn spawn_wavefunction(
                 material: bevy::pbr::MeshMaterial3d(
                     standard_materials.add(WFType::Density.filled_mat().unwrap()),
                 ),
-                // wf_component,
                 wf_type: WFType::Density,
                 transform: Transform::from_xyz(0.0, 0.0, -2.0),
                 ..Default::default()
