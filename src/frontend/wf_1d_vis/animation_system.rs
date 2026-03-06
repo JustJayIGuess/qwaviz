@@ -38,7 +38,7 @@ pub fn wf_animation_system(
             wf,
             render_step_size,
             wf_cache,
-            time_scale: _,
+            ..
         },
         children,
     ) in wf_component_query.iter()

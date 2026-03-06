@@ -16,9 +16,12 @@ use crate::{
 #[derive(Component, Default, Clone)]
 pub(in crate::frontend) struct WFComponent {
     pub wf: Arc<Ket<WF1D>>,
-    pub time_scale: f32,
-    pub render_step_size: f32,
     pub wf_cache: Cache1D,
+    pub eval_step_size: f32,
+    pub render_step_size: f32,
+    pub time_scale: f32,
+    pub paused: bool,
+    pub time: f32,
 }
 
 #[derive(Component, Default)]

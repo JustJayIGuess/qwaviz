@@ -1,4 +1,5 @@
-use num_complex::{Complex32, ComplexFloat};
+use num_complex::Complex32;
+use splines::{Interpolation, Key, Spline};
 use thiserror::Error;
 
 use crate::framework::{
@@ -8,12 +9,9 @@ use crate::framework::{
 
 #[derive(Clone)]
 pub struct Cache1D {
-    min: f32,
-    range: f32,
-    step_size: f32,
-    n: usize,
-    pub cache_value: Vec<Complex32>,
-    pub cache_density: Vec<f32>,
+    spline_re: Spline<f32, f32>,
+    spline_im: Spline<f32, f32>,
+    spline_p: Spline<f32, f32>,
 }
 
 impl Default for Cache1D {
@@ -38,14 +36,27 @@ impl Cache1D {
         if step_size <= 0.0 {
             return Err(Cache1DError::NegativeStepSize);
         }
-        let num = ((max - min) / step_size).ceil() as usize;
+
+        let mut keys: Vec<Key<f32, f32>> = vec![];
+
+        let mut x = min;
+        keys.push(Key::new(
+            x - 2.0 * step_size,
+            0.0,
+            Interpolation::CatmullRom,
+        ));
+        keys.push(Key::new(x - step_size, 0.0, Interpolation::CatmullRom));
+        while x <= max {
+            keys.push(Key::new(x, 0.0, Interpolation::CatmullRom));
+            x += step_size;
+        }
+        keys.push(Key::new(x, 0.0, Interpolation::CatmullRom));
+        keys.push(Key::new(x + step_size, 0.0, Interpolation::CatmullRom));
+
         Ok(Cache1D {
-            min,
-            range: max - min,
-            step_size,
-            cache_value: vec![Complex32::ZERO; num],
-            cache_density: vec![0.0; num],
-            n: num,
+            spline_re: Spline::from_vec(keys.clone()),
+            spline_im: Spline::from_vec(keys.clone()),
+            spline_p: Spline::from_vec(keys),
         })
     }
 
@@ -54,36 +65,30 @@ impl Cache1D {
     }
 
     pub fn update(&mut self, wf: &Ket<WF1D>, t: f32) {
-        // let mut x = self.min;
-        for i in 0..self.cache_value.len() {
-            let x = self.min + i as f32 * self.step_size;
-            self.cache_value[i] = wf.f(x, t);
-            self.cache_density[i] = wf.p(x, t).abs();
-            // x += self.step_size;
+        for i in 0..self.spline_re.len() {
+            let x = self.spline_re.get(i).unwrap().t;
+            if let (Some(re), Some(im), Some(p)) = (
+                self.spline_re.get_mut(i),
+                self.spline_im.get_mut(i),
+                self.spline_p.get_mut(i),
+            ) {
+                let value = wf.f(x, t);
+                *re.value = value.re;
+                *im.value = value.im;
+                *p.value = value.norm_sqr();
+            }
         }
     }
 
     pub fn get_value(&self, x: f32) -> Complex32 {
-        if x <= self.min {
-            return self.cache_value[0];
+        if let (Some(re), Some(im)) = (self.spline_re.sample(x), self.spline_im.sample(x)) {
+            Complex32::new(re, im)
+        } else {
+            Complex32::ZERO
         }
-        if x >= self.min + self.range {
-            return self.cache_value[self.n - 1];
-        }
-
-        let idx = ((x - self.min) / self.step_size).round() as usize;
-        self.cache_value[idx.clamp(0, self.n - 1)]
     }
 
     pub fn get_density(&self, x: f32) -> f32 {
-        if x <= self.min {
-            return self.cache_density[0];
-        }
-        if x >= self.min + self.range {
-            return self.cache_density[self.n - 1];
-        }
-
-        let idx = ((x - self.min) / self.step_size).round() as usize;
-        self.cache_density[idx.clamp(0, self.n - 1)]
+        self.spline_p.sample(x).unwrap_or(0.0)
     }
 }

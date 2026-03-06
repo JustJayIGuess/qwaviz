@@ -40,7 +40,10 @@ pub fn get_setup(
             wf_cache: Cache1D::from_ket(&ket_arc, 0.02).unwrap(),
             wf: ket_arc.clone(),
             time_scale: 0.1,
+            eval_step_size: 0.05,
             render_step_size: 0.01,
+            paused: false,
+            time: 0.0,
         };
 
         // wavefunction group
