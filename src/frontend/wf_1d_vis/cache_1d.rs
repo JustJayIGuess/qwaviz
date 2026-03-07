@@ -2,6 +2,7 @@
 //! between sampled points.
 
 use num_complex::Complex32;
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use splines::{Interpolation, Key, Spline};
 use thiserror::Error;
 
@@ -80,10 +81,15 @@ impl Cache1D {
 
     /// Update the cache with values at time `t`.
     pub fn update(&mut self, wf: &Ket<Sign1D>, t: f32) {
-        for i in 0..self.spline_re.len() {
-            let x = self.spline_re.get(i).unwrap().t;
+        let xs: Vec<_> = self.spline_re.into_iter().map(|k| k.t).collect();
+
+        #[cfg(feature = "par_braket")]
+        let values: Vec<_> = xs.par_iter().map(|x| wf.f(*x, t)).collect();
+        #[cfg(not(feature = "par_braket"))]
+        let values: Vec<_> = xs.iter().map(|x| wf.f(*x, t)).collect();
+
+        for (i, value) in values.iter().enumerate() {
             if let (Some(re), Some(im)) = (self.spline_re.get_mut(i), self.spline_im.get_mut(i)) {
-                let value = wf.f(x, t);
                 *re.value = value.re;
                 *im.value = value.im;
             }
