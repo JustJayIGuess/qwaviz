@@ -14,6 +14,7 @@ Hopefully will be expanding this to be flexible to 1D/2D/3D and custom time-inde
 - [x] Realtime multithreaded cache updates
 - [x] Pausing functionality
 - [ ] Better time controls
+- [ ] Togglable visibility of elements
 - [ ] Axis labels
 - [ ] Switchable camera (perspective/ortho)
 - [ ] 2-State system visualiser
