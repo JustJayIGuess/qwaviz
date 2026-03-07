@@ -1,7 +1,7 @@
 //! Generalised functionality for wavefunction bras in Dirac's Bra-Ket formalism.
 
 use std::{
-    ops::{Add, Mul, Neg, Sub},
+    ops::{Add, Neg, Sub},
     sync::Arc,
 };
 
@@ -9,11 +9,7 @@ use std::{
 use rayon::iter::{ParallelBridge, ParallelIterator};
 
 use super::super::{
-    core::{
-        domain::{Domain, SubDomain},
-        field::Field,
-        vectorspace::VectorSpace,
-    },
+    core::{domain::SubDomain, field::Field, vectorspace::VectorSpace},
     wavefunction::{Wavefunction, signature::WFSignature},
 };
 use super::{AbstractBra, Ket, WFFunc, WFOperation};
@@ -200,6 +196,6 @@ where
             .iter_with_step_size(step_size)
             .par_bridge()
             .map(|x| S::mul_to_codomain(step_size, self.f(x, t)) * ket.f(x, t))
-            .reduce(|| S::Out::zero(), |a, b| a + b)
+            .reduce(S::Out::zero, |a, b| a + b)
     }
 }

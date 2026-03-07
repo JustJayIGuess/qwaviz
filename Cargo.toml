@@ -16,4 +16,5 @@ splines = "5.0.0"
 thiserror = "2.0.18"
 
 [features]
+default = ["par_braket"]
 par_braket = ["dep:rayon"]

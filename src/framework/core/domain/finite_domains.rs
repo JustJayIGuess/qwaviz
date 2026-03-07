@@ -3,7 +3,7 @@
 
 use std::ops::{Add, Mul};
 
-use super::{Domain, SubDomain, SubDomain1DIter};
+use super::{SubDomain, SubDomain1DIter};
 
 /// A subdomain with finitely many coordinates
 #[derive(Clone)]

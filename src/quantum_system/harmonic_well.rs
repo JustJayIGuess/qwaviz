@@ -7,13 +7,11 @@ use std::{
 
 use num_complex::Complex32;
 
-use crate::framework::prelude::SubDomain1D;
-
-use super::super::{
-    braket::{Ket, WFOperation},
-    discrete_system::DiscreteSystem,
-    wavefunction::signature::{Sign1D, WFSignature},
+use super::super::framework::{
+    braket::Ket, core::domain::SubDomain1D, wavefunction::signature::Sign1D,
 };
+
+use super::DiscreteSystem;
 
 /// A struct representing a harmonic well potential
 pub struct HarmonicWell {
@@ -29,8 +27,6 @@ pub struct HarmonicWell {
 
 /// Inverse fourth root of pi
 static PI_FTH_RT: LazyLock<f32> = LazyLock::new(|| 1.0 / PI.sqrt().sqrt());
-/// Square root of pi
-static PI_SQRT: LazyLock<f32> = LazyLock::new(|| PI.sqrt());
 
 /// Courtesy of `ChatGPT`!
 /// Seriously, how is it so hard to find good implementations of
@@ -74,7 +70,7 @@ fn eigenfunction(x: f32, t: f32, omega: f32, mass: f32, hbar: f32, n: i32) -> Co
 impl HarmonicWell {
     /// Create a harmonic well
     #[must_use]
-    pub fn new(omega: f32, mass: f32, step_size: f32, hbar: f32, half_width: f32) -> HarmonicWell {
+    pub fn new(omega: f32, mass: f32, hbar: f32, half_width: f32) -> HarmonicWell {
         HarmonicWell {
             omega,
             mass,

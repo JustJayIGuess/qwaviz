@@ -4,12 +4,10 @@ use std::sync::Arc;
 
 use num_complex::Complex32;
 
-use crate::framework::{
-    braket::{Ket, WFOperation},
-    core::{domain::finite_domains::FiniteSubDomain, field::Field},
-    discrete_system::DiscreteSystem,
-    wavefunction::signature::SigFinite,
+use super::super::framework::{
+    braket::Ket, core::domain::finite_domains::FiniteSubDomain, wavefunction::signature::SigFinite,
 };
+use super::DiscreteSystem;
 
 /// A two-state quantum system
 pub struct TwoState {

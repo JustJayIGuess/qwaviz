@@ -46,7 +46,7 @@ pub(in crate::frontend) struct WFComponent {
 
 /// The type of wavefunction visualisation attached to an entity. `Real` and
 /// `Imag` each visualise the real and imaginary parts of the wavefunction,
-/// while `Full` 
+/// while `Full`
 #[derive(Component, Default)]
 pub(in crate::frontend) enum WFType {
     #[default]

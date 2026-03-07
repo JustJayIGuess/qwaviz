@@ -4,13 +4,10 @@ use std::{f32::consts::PI, sync::Arc};
 
 use num_complex::Complex32;
 
-use crate::framework::prelude::SubDomain1D;
-
-use super::super::{
-    braket::{Ket, WFOperation},
-    discrete_system::DiscreteSystem,
-    wavefunction::signature::{Sign1D, WFSignature},
+use super::super::framework::{
+    braket::Ket, core::domain::SubDomain1D, wavefunction::signature::Sign1D,
 };
+use super::DiscreteSystem;
 
 #[derive(Clone)]
 /// A struct representing an infinite square well with a particle inside.
@@ -49,12 +46,8 @@ impl DiscreteSystem<Sign1D> for InfiniteSquareWell {
 impl InfiniteSquareWell {
     /// Create an infinite square well
     #[must_use]
-    pub fn new(width: f32, mass: f32, hbar: f32, step_size: f32) -> InfiniteSquareWell {
-        InfiniteSquareWell {
-            width,
-            mass,
-            hbar,
-        }
+    pub fn new(width: f32, mass: f32, hbar: f32) -> InfiniteSquareWell {
+        InfiniteSquareWell { width, mass, hbar }
     }
 
     /// Return a the state resulting from suddenly expanding an ISW from width `initial_width` to `final_width`

@@ -8,7 +8,7 @@ pub use harmonic_well::HarmonicWell;
 pub use infinite_square_well::InfiniteSquareWell;
 pub use two_state::TwoState;
 
-use super::{
+use super::framework::{
     braket::{AbstractBra, AbstractKet, Ket},
     core::vectorspace::VectorSpace,
     wavefunction::signature::WFSignature,
@@ -21,7 +21,14 @@ pub trait DiscreteSystem<S: WFSignature> {
     fn energy_eigenstate(&self, n: i32) -> Ket<S>;
 
     /// Return a state which evolves from `initial_state(t=0)` according to the Schrodinger equation
-    fn evolution(&self, initial_state: &Ket<S>, t0: S::Time, step_size: S::Space, min_n: i32, max_n: i32) -> Ket<S> {
+    fn evolution(
+        &self,
+        initial_state: &Ket<S>,
+        t0: S::Time,
+        step_size: S::Space,
+        min_n: i32,
+        max_n: i32,
+    ) -> Ket<S> {
         let coef_eigenkets: Vec<(S::Out, Ket<S>)> = (min_n..=max_n)
             .map(|i| {
                 let basis_state = self.energy_eigenstate(i);

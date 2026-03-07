@@ -58,21 +58,16 @@ pub fn wf_animation_system(
                     .map(|x| {
                         let value = wf_cache.at(x);
                         match wf_type {
-                            WFType::Full => {
-                                vec3(x, value.re, value.im)
-                            }
+                            WFType::Full => vec3(x, value.re, value.im),
                             WFType::Real => vec3(x, value.re, 0.0),
                             WFType::Imag => vec3(x, 0.0, value.im),
                             WFType::Density => vec3(x, value.norm_sqr().abs(), 0.0),
-                        }})
+                        }
+                    })
                     .collect();
             }
 
-            if let Ok((
-                fill,
-                wf_type,
-            )) = filled_query.get(*child)
-            {
+            if let Ok((fill, wf_type)) = filled_query.get(*child) {
                 let mesh = meshes
                     .get_mut(fill.mesh_handle())
                     .ok_or(FilledWaveMeshError::NoMesh)?;

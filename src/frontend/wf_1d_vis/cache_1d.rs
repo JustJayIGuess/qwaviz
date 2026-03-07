@@ -14,7 +14,7 @@ use crate::framework::{
 /// This is updated each frame in `PreUpdate`, and is kept to prevent
 /// repeat calculations and allow interpolation between sampled points via
 /// a Catmull-Rom spline.
-/// 
+///
 /// Note that the probability density can be inferred from the wavefunction,
 /// so no cache is kept of the evaluation of `WFKet<WF1D>::p(&self, x, t)`.
 #[derive(Clone)]
@@ -82,10 +82,7 @@ impl Cache1D {
     pub fn update(&mut self, wf: &Ket<Sign1D>, t: f32) {
         for i in 0..self.spline_re.len() {
             let x = self.spline_re.get(i).unwrap().t;
-            if let (Some(re), Some(im)) = (
-                self.spline_re.get_mut(i),
-                self.spline_im.get_mut(i),
-            ) {
+            if let (Some(re), Some(im)) = (self.spline_re.get_mut(i), self.spline_im.get_mut(i)) {
                 let value = wf.f(x, t);
                 *re.value = value.re;
                 *im.value = value.im;

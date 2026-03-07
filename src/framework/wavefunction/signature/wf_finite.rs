@@ -2,10 +2,7 @@
 
 use num_complex::Complex32;
 
-use crate::framework::core::domain::finite_domains::FiniteSubDomain;
-
-use super::super::super::core::domain::SubDomain1D;
-use super::WFSignature;
+use super::{super::super::core::domain::finite_domains::FiniteSubDomain, WFSignature};
 
 /// Standard wavefunction signature for finite coordinates and 1 temporal dimension.
 #[derive(Clone)]
