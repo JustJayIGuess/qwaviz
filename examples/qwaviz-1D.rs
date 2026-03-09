@@ -16,7 +16,7 @@ fn main() {
 #[allow(unused)]
 fn square_in_harmonic_well() -> Ket<Sign1D> {
     let hw = HarmonicWell::new(10.0, 1.0, 1.0, 4.0);
-    let ket_0 = Ket::new_static(
+    let ket_0 = Ket::new(
         |_, _| Complex32::ONE,
         SubDomain1D {
             lower: -1.0,

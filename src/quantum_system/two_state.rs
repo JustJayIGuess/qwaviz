@@ -62,7 +62,7 @@ impl DiscreteSystem<SigFinite> for TwoState {
             };
         let mean_level = 0.5 * (level_1 + level_2);
         let energy: f32 = mean_level + split;
-        Ket::new_static(
+        Ket::new(
             move |x: i32, t: f32| {
                 Complex32::cis(-energy * t / hbar)
                     * match x {

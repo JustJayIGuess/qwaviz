@@ -33,7 +33,7 @@ impl DiscreteSystem<Sign1D> for InfiniteSquareWell {
         let width = self.width;
         let mass = self.mass;
         let hbar = self.hbar;
-        Ket::<Sign1D>::new_static(
+        Ket::<Sign1D>::new(
             move |x, t| eigenfunction(x, t, width, mass, hbar, n),
             SubDomain1D {
                 lower: 0.0,
@@ -55,7 +55,7 @@ impl InfiniteSquareWell {
     pub fn expansion_state(&self, initial_width: f32, n: i32) -> Ket<Sign1D> {
         let mass = self.mass;
         let hbar = self.hbar;
-        Ket::<Sign1D>::new_static(
+        Ket::<Sign1D>::new(
             move |x, t| eigenfunction(x, t, initial_width, mass, hbar, n),
             SubDomain1D {
                 lower: 0.0,

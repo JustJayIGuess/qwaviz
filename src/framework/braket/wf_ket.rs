@@ -9,7 +9,7 @@ use super::super::{
     core::{domain::SubDomain, field::Field, vectorspace::VectorSpace},
     wavefunction::{Wavefunction, signature::WFSignature},
 };
-use super::{AbstractBra, AbstractKet, Bra, WFFunc, WFOperation};
+use super::{AbstractBra, AbstractKet, Bra, WFOperation};
 
 /// A ket (vector) holding a wavefunction
 #[derive(Clone)]
@@ -24,20 +24,23 @@ where
 }
 
 impl<S: WFSignature> Ket<S> {
-    /// Return a new ket with the given wavefunction and subdomain
-    pub fn new(f: Arc<WFFunc<S>>, subdomain: S::SubDom) -> Ket<S> {
-        Ket {
-            wavefunction: WFOperation::func(f),
-            subdomain,
-        }
-    }
+    // /// Return a new ket with the given wavefunction and subdomain
+    // pub fn new(f: Arc<WFFunc<S>>, subdomain: S::SubDom) -> Ket<S> {
+    //     Ket {
+    //         wavefunction: WFOperation::func(f),
+    //         subdomain,
+    //     }
+    // }
 
     /// Return a new ket with the given ('static) wavefunction and subdomain
-    pub fn new_static<F: Fn(S::Space, S::Time) -> S::Out + 'static + Send + Sync>(
+    pub fn new<F: Fn(S::Space, S::Time) -> S::Out + 'static + Send + Sync>(
         f: F,
         subdomain: S::SubDom,
     ) -> Ket<S> {
-        Self::new(Arc::new(f), subdomain)
+        Ket {
+            wavefunction: WFOperation::func(Arc::new(f)),
+            subdomain,
+        }
     }
 
     /// Iterate over the domain of the ket with the given `step_size`
