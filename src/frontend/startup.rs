@@ -1,6 +1,6 @@
 //! Startup functionality
 
-use std::{f32::consts::PI, sync::Arc};
+use std::f32::consts::PI;
 
 use bevy::{
     camera::{Camera, Camera3d},
@@ -17,7 +17,9 @@ use bevy_polyline::prelude::{Polyline, PolylineMaterial};
 use super::wf_component::WFComponent;
 use crate::{
     framework::{braket::Ket, wavefunction::signature::Sign1D},
-    frontend::wf_1d_vis::{Cache1D, spawn_wavefunction},
+    frontend::
+        wf_1d_vis::spawn_wavefunction
+    ,
 };
 
 /// Get a bevy startup system that visualises the given ket.
@@ -31,22 +33,17 @@ pub fn get_setup(
     ResMut<Assets<PolylineMaterial>>,
     ResMut<Assets<Polyline>>,
 ) {
-    let ket_arc = Arc::new(ket);
+    let mut ket = Some(ket);
+
+    // let ket_arc = Arc::new(ket);
     move |mut commands: Commands,
           mut meshes: ResMut<Assets<Mesh>>,
           mut standard_materials: ResMut<Assets<StandardMaterial>>,
           mut polyline_materials: ResMut<Assets<PolylineMaterial>>,
           mut polylines: ResMut<Assets<Polyline>>| {
-        // wavefunction visualiser spec
-        let wf_component = WFComponent {
-            wf_cache: Cache1D::from_ket(&ket_arc, 0.02).unwrap(),
-            wf: ket_arc.clone(),
-            time_scale: 0.1,
-            eval_step_size: 0.05,
-            render_step_size: 0.01,
-            paused: false,
-            time: 0.0,
-        };
+
+        let ket = ket.take().expect("Startup system ran more than once!");
+        let wf_component = WFComponent::new(ket, 0.05, 0.01, 0.1).unwrap();
 
         // wavefunction group
         spawn_wavefunction(

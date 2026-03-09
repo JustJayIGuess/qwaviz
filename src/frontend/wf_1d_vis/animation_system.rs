@@ -38,25 +38,16 @@ pub fn wf_animation_system(
     filled_query: Query<(&FilledWave, &WFType)>,
     wf_component_query: Query<(&WFComponent, &Children)>,
 ) -> Result<(), BevyError> {
-    for (
-        WFComponent {
-            wf,
-            render_step_size,
-            wf_cache,
-            ..
-        },
-        children,
-    ) in wf_component_query.iter()
-    {
+    for (wf, children) in wf_component_query.iter() {
         for child in children {
             if let Ok((PolylineHandle(handle), wf_type)) = poly_query.get(*child) {
                 let polyline = polylines
                     .get_mut(handle)
                     .ok_or(WFPolylineError::MissingPolyline)?;
                 polyline.vertices = wf
-                    .iter_with_step_size(*render_step_size)
+                    .iter_render_points()
                     .map(|x| {
-                        let value = wf_cache.at(x);
+                        let value = wf.cache_at(x);
                         match wf_type {
                             WFType::Full => vec3(x, value.re, value.im),
                             WFType::Real => vec3(x, value.re, 0.0),
@@ -96,9 +87,9 @@ pub fn wf_animation_system(
                                 WFType::Full => {
                                     return Err(FilledWaveMeshError::AppliedToFullWF.into());
                                 }
-                                WFType::Real => wf_cache.at(x).re,
-                                WFType::Imag => wf_cache.at(x).im,
-                                WFType::Density => wf_cache.at(x).norm_sqr().abs(),
+                                WFType::Real => wf.cache_at(x).re,
+                                WFType::Imag => wf.cache_at(x).im,
+                                WFType::Density => wf.cache_at(x).norm_sqr().abs(),
                             };
                             val_p[1] = y;
                             *domain_c = [y * fill.intensity(); 4];

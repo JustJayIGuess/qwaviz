@@ -8,12 +8,20 @@ use bevy::{
     pbr::StandardMaterial,
 };
 use bevy_polyline::prelude::PolylineMaterial;
+use num_complex::Complex32;
 use thiserror::Error;
 
-use crate::{
+use super::super::{
     framework::{braket::Ket, wavefunction::signature::Sign1D},
-    frontend::wf_1d_vis::Cache1D,
+    frontend::wf_1d_vis::{Cache1D, Cache1DError},
 };
+
+#[derive(Debug, Error)]
+#[allow(clippy::missing_docs_in_private_items)]
+pub enum WFComponentError {
+    #[error("Unable to create cache.")]
+    CacheError(#[from] Cache1DError),
+}
 
 /// A component holding information for one wavefunction.
 /// There should only be one `WFComponent` per wavefunction - additional
@@ -22,17 +30,13 @@ use crate::{
 #[derive(Component, Default, Clone)]
 pub(in crate::frontend) struct WFComponent {
     /// A reference to the wavefunction
-    pub wf: Arc<Ket<Sign1D>>,
+    ket: Arc<Ket<Sign1D>>,
     /// The wavefunction cache. This may be mutated by bevy systems.
-    pub wf_cache: Cache1D,
-    /// The step size at which to evaluate the wavefunction each frame.
-    /// This can be made relatively low as points can be interpolated between
-    /// samples of the wavefunction in the cache.
-    pub eval_step_size: f32,
+    cache: Cache1D,
     /// The step size at which to render the wavefunction each frame. This
     /// should be lower than `eval_step_size`, as points between wavefunction
     /// samples will be interpolated via Catmull-Rom.
-    pub render_step_size: f32,
+    render_step: f32,
     /// The time scale at which to render the wavefunction. Lower values are
     /// slower.
     pub time_scale: f32,
@@ -42,6 +46,42 @@ pub(in crate::frontend) struct WFComponent {
     /// The current time value associated with the wavefunction. This may be
     /// mutated by bevy systems.
     pub time: f32,
+}
+
+impl WFComponent {
+    /// Create a wavefunction component for a wavefunction
+    pub fn new(
+        ket: Ket<Sign1D>,
+        cache_step_size: f32,
+        render_step_size: f32,
+        time_scale: f32,
+    ) -> Result<Self, WFComponentError> {
+        let cache = Cache1D::from_ket(&ket, cache_step_size)?;
+        Ok(Self {
+            ket: Arc::new(ket),
+            cache,
+            render_step: render_step_size,
+            time_scale,
+            paused: false,
+            time: 0.0,
+        })
+    }
+
+    /// Iterate over the wavefunction domain with rendering step size
+    pub fn iter_render_points(&self) -> impl Iterator<Item = f32> {
+        self.ket.iter_with_step_size(self.render_step)
+    }
+
+    /// Update the wavefunction value cache
+    pub fn update_cache(&mut self) {
+        self.cache.update(&self.ket, self.time);
+    }
+
+    /// Get the value at the given point. This is interpolated from sampled
+    /// points via Catmull-Rom.
+    pub fn cache_at(&self, x: f32) -> Complex32 {
+        self.cache.at(x)
+    }
 }
 
 /// The type of wavefunction visualisation attached to an entity. `Real` and

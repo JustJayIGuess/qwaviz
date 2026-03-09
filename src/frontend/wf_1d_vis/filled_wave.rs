@@ -28,8 +28,7 @@ impl FilledWave {
         meshes: &mut ResMut<Assets<Mesh>>,
     ) -> Self {
         let positions: Vec<_> = wf_component
-            .wf
-            .iter_with_step_size(wf_component.eval_step_size)
+            .iter_render_points()
             .flat_map(|x| [[x, 0.0, 0.0], [x, 0.0, 0.0]])
             .collect();
         let colors = vec![[1.0, 1.0, 1.0, 1.0]; positions.len()];

@@ -10,7 +10,7 @@ use std::f32::consts::PI;
 
 pub(in crate::frontend) use animation_system::wf_animation_system;
 pub(in crate::frontend) use bundle::{WFFilledWaveBundle, WFPolylineBundle};
-pub(in crate::frontend) use cache_1d::Cache1D;
+pub(in crate::frontend) use cache_1d::{Cache1D, Cache1DError};
 pub(in crate::frontend) use cache_1d_system::update_cache_system;
 pub(in crate::frontend) use filled_wave::FilledWave;
 
@@ -70,7 +70,7 @@ pub fn spawn_wavefunction(
             });
             parent.spawn(WFFilledWaveBundle {
                 mesh: Mesh3d(fill_re.mesh_handle().clone()),
-                wave: fill_re,
+                fill: fill_re,
                 material: bevy::pbr::MeshMaterial3d(
                     standard_materials.add(WFType::Real.filled_mat().unwrap()),
                 ),
@@ -90,7 +90,7 @@ pub fn spawn_wavefunction(
             });
             parent.spawn(WFFilledWaveBundle {
                 mesh: Mesh3d(fill_im.mesh_handle().clone()),
-                wave: fill_im,
+                fill: fill_im,
                 material: bevy::pbr::MeshMaterial3d(
                     standard_materials.add(WFType::Imag.filled_mat().unwrap()),
                 ),
@@ -112,7 +112,7 @@ pub fn spawn_wavefunction(
             });
             parent.spawn(WFFilledWaveBundle {
                 mesh: Mesh3d(fill_p.mesh_handle().clone()),
-                wave: fill_p,
+                fill: fill_p,
                 material: bevy::pbr::MeshMaterial3d(
                     standard_materials.add(WFType::Density.filled_mat().unwrap()),
                 ),

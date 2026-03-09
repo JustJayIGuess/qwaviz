@@ -23,8 +23,6 @@ pub fn update_cache_system(
             wf_component.time += wf_component.time_scale * time.delta_secs();
         }
 
-        let t = wf_component.time;
-        let f = wf_component.wf.clone();
-        wf_component.wf_cache.update(&f, t);
+        wf_component.update_cache();
     }
 }

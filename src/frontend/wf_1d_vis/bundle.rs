@@ -20,7 +20,7 @@ pub(in crate::frontend) struct WFPolylineBundle {
 #[derive(Bundle, Default)]
 pub struct WFFilledWaveBundle {
     /// The filled wave mesh component
-    pub wave: FilledWave,
+    pub fill: FilledWave,
     /// Handle to the mesh
     pub mesh: Mesh3d,
     /// Material of the `FilledWave`
