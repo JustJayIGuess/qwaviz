@@ -1,6 +1,6 @@
 //! Functionality for working with infinite square well problems
 
-use std::{f32::consts::PI, sync::Arc};
+use std::f32::consts::PI;
 
 use num_complex::Complex32;
 
@@ -33,8 +33,8 @@ impl DiscreteSystem<Sign1D> for InfiniteSquareWell {
         let width = self.width;
         let mass = self.mass;
         let hbar = self.hbar;
-        Ket::<Sign1D>::new(
-            Arc::new(move |x, t| eigenfunction(x, t, width, mass, hbar, n)),
+        Ket::<Sign1D>::new_static(
+            move |x, t| eigenfunction(x, t, width, mass, hbar, n),
             SubDomain1D {
                 lower: 0.0,
                 upper: width,
@@ -55,8 +55,8 @@ impl InfiniteSquareWell {
     pub fn expansion_state(&self, initial_width: f32, n: i32) -> Ket<Sign1D> {
         let mass = self.mass;
         let hbar = self.hbar;
-        Ket::<Sign1D>::new(
-            Arc::new(move |x, t| eigenfunction(x, t, initial_width, mass, hbar, n)),
+        Ket::<Sign1D>::new_static(
+            move |x, t| eigenfunction(x, t, initial_width, mass, hbar, n),
             SubDomain1D {
                 lower: 0.0,
                 upper: initial_width,

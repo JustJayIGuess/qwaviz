@@ -17,9 +17,7 @@ use bevy_polyline::prelude::{Polyline, PolylineMaterial};
 use super::wf_component::WFComponent;
 use crate::{
     framework::{braket::Ket, wavefunction::signature::Sign1D},
-    frontend::
-        wf_1d_vis::spawn_wavefunction
-    ,
+    frontend::wf_1d_vis::spawn_wavefunction,
 };
 
 /// Get a bevy startup system that visualises the given ket.
@@ -34,14 +32,11 @@ pub fn get_setup(
     ResMut<Assets<Polyline>>,
 ) {
     let mut ket = Some(ket);
-
-    // let ket_arc = Arc::new(ket);
     move |mut commands: Commands,
           mut meshes: ResMut<Assets<Mesh>>,
           mut standard_materials: ResMut<Assets<StandardMaterial>>,
           mut polyline_materials: ResMut<Assets<PolylineMaterial>>,
           mut polylines: ResMut<Assets<Polyline>>| {
-
         let ket = ket.take().expect("Startup system ran more than once!");
         let wf_component = WFComponent::new(ket, 0.05, 0.01, 0.1).unwrap();
 

@@ -32,6 +32,14 @@ impl<S: WFSignature> Ket<S> {
         }
     }
 
+    /// Return a new ket with the given ('static) wavefunction and subdomain
+    pub fn new_static<F: Fn(S::Space, S::Time) -> S::Out + 'static + Send + Sync>(
+        f: F,
+        subdomain: S::SubDom,
+    ) -> Ket<S> {
+        Self::new(Arc::new(f), subdomain)
+    }
+
     /// Iterate over the domain of the ket with the given `step_size`
     pub fn iter_with_step_size(
         &self,

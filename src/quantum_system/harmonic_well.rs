@@ -2,7 +2,7 @@
 
 use std::{
     f32::consts::{PI, SQRT_2},
-    sync::{Arc, LazyLock},
+    sync::LazyLock,
 };
 
 use num_complex::Complex32;
@@ -83,8 +83,8 @@ impl HarmonicWell {
 impl DiscreteSystem<Sign1D> for HarmonicWell {
     fn energy_eigenstate(&self, n: i32) -> Ket<Sign1D> {
         let (omega, mass, hbar) = (self.omega, self.mass, self.hbar);
-        Ket::<Sign1D>::new(
-            Arc::new(move |x, t| eigenfunction(x, t, omega, mass, hbar, n - 1)),
+        Ket::<Sign1D>::new_static(
+            move |x, t| eigenfunction(x, t, omega, mass, hbar, n - 1),
             SubDomain1D {
                 lower: -self.half_width,
                 upper: self.half_width,

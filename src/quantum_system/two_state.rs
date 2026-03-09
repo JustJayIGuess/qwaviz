@@ -1,7 +1,5 @@
 //! Functionality for simulating two-state quantum systems.
 
-use std::sync::Arc;
-
 use num_complex::Complex32;
 
 use super::super::framework::{
@@ -64,14 +62,14 @@ impl DiscreteSystem<SigFinite> for TwoState {
             };
         let mean_level = 0.5 * (level_1 + level_2);
         let energy: f32 = mean_level + split;
-        Ket::new(
-            Arc::new(move |x: i32, t: f32| {
+        Ket::new_static(
+            move |x: i32, t: f32| {
                 Complex32::cis(-energy * t / hbar)
                     * match x {
                         0 => eigenstate.0,
                         _ => eigenstate.1,
                     }
-            }),
+            },
             FiniteSubDomain {
                 min_idx: 0,
                 max_idx: 1,
