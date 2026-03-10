@@ -14,6 +14,9 @@ Hopefully will be expanding this to be flexible to 1D/2D/3D and custom time-inde
 - [x] Realtime multithreaded cache updates
 - [x] Pausing functionality
 - [ ] Better time controls
+- [ ] Circular 1D wavefunction w/ continuity condition
+- [ ] Spin-1/2 systems
+- [ ] Measurement API
 - [ ] Togglable visibility of elements
 - [ ] Axis labels
 - [ ] Switchable camera (perspective/ortho)
